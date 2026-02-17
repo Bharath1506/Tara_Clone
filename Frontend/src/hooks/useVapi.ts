@@ -459,7 +459,7 @@ export const useVapi = () => {
             participantNamesRef.current = { employee: employeeInputName || 'Employee', manager: managerInputName || 'Manager' };
 
             const systemPrompt = getSystemPromptWithConfigs(okrs, reviewData, employeeInputName, managerInputName);
-            const assistantId = import.meta.env.VITE_VAPI_ASSISTANT_ID || '416bb3db-da61-4512-aca3-1002b4b5d13f';
+            const assistantId = import.meta.env.VITE_VAPI_ASSISTANT_ID || '43d3bb67-ade8-403d-87ba-0d00c5ff991f';
 
             await vapi.start(assistantId, {
                 model: {
@@ -476,12 +476,12 @@ export const useVapi = () => {
                             type: "function",
                             function: {
                                 name: "update_key_result",
-                                description: "Updates ONLY the progress (actual value) of a specific Key Result. Call this when the employee confirms a new actual value.",
+                                description: "Update the current actual value of a Key Result.",
                                 parameters: {
                                     type: "object",
                                     properties: {
-                                        id: { type: "string" },
-                                        value: { type: "string" }
+                                        id: { type: "string", description: "The internal ID of the Key Result." },
+                                        value: { type: "string", description: "The new actual value (number)." }
                                     },
                                     required: ["id", "value"]
                                 }
@@ -491,17 +491,17 @@ export const useVapi = () => {
                             type: "function",
                             function: {
                                 name: "update_okr_rating",
-                                description: "Updates the rating for an Objective, Key Result, or Competency immediately after it is provided. **NO REASONS FOR OKRS**: Do not ask for reasons or comments for Objective or Key Result ratings. Capture the rating and move to the next item immediately. **SILENT UPDATES**: NEVER verbally confirm successful tool calls. Do not say \"recorded\", \"success\", \"updated\", or repeat values. Move directly to the next hierarchical item or question immediately after the tool call.",
+                                description: "Record a rating or comment for an Objective, Key Result, or Competency.",
                                 parameters: {
                                     type: "object",
                                     properties: {
-                                        reviewId: { type: "string", description: "The overarching Review ID (e.g., MongoDB _id)" },
-                                        id: { type: "string", description: "The specific item ID" },
-                                        name: { type: "string", description: "The name of the item" },
-                                        rating: { type: "number", description: "Rating (1-5)" },
-                                        comment: { type: "string", description: "Feedback text" },
-                                        role: { type: "string", enum: ["employee", "manager"] },
-                                        type: { type: "string", enum: ["objective", "key_result", "competency", "accomplishments", "next_quarter_plan", "manager_comments"] }
+                                        id: { type: "string", description: "The ID of the item being rated." },
+                                        reviewId: { type: "string", description: "The ID of the review session." },
+                                        role: { type: "string", enum: ["employee", "manager"], description: "Who is providing the rating." },
+                                        type: { type: "string", description: "Type of item: 'objective', 'key_result', 'competency', 'accomplishments', 'manager_comments', etc." },
+                                        name: { type: "string", description: "Name of the item." },
+                                        rating: { type: "number", description: "Rating value (1-5)." },
+                                        comment: { type: "string", description: "Qualitative feedback or reason." }
                                     },
                                     required: ["role", "type"]
                                 }
@@ -511,38 +511,29 @@ export const useVapi = () => {
                             type: "function",
                             function: {
                                 name: "submit_employee_self_assessment",
-                                description: "Final submission of employee assessment data.",
-                                parameters: {
-                                    type: "object",
-                                    properties: {}
-                                }
+                                description: "Submit the employee's self-assessment part of the review.",
+                                parameters: { type: "object", properties: {} }
                             }
                         },
                         {
                             type: "function",
                             function: {
                                 name: "submit_competency_review",
-                                description: "Final submission of competency reviews.",
-                                parameters: {
-                                    type: "object",
-                                    properties: {}
-                                }
+                                description: "Submit the competency review section.",
+                                parameters: { type: "object", properties: {} }
                             }
                         },
                         {
                             type: "function",
                             function: {
                                 name: "end_session",
-                                description: "Ends the voice session.",
+                                description: "End the performance review session.",
                                 parameters: { type: "object", properties: {} }
                             }
                         }
                     ]
                 },
-                firstMessage: `Hi. I'm Tara, your HR-AI assistant. Thank you, ${employeeInputName || 'Employee'} and ${managerInputName || 'Manager'}. Thank you for joining the performance review session. Can we start?`,
-                silenceTimeoutSeconds: 30,
-                maxDurationSeconds: 1800,
-                fillersEnabled: true
+                firstMessage: `Hi. I'm Tara, your HR-AI assistant. Thank you, ${employeeInputName || 'Employee'} and ${managerInputName || 'Manager'}. Thank you for joining the performance review session. Can we start?`
             } as any);
 
         } catch (err: any) {

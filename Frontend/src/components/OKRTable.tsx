@@ -125,11 +125,11 @@ export const OKRTable = ({ okrs }: OKRTableProps) => {
                                         <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-gray-100">
                                             <div
                                                 className="bg-green-600 h-full transition-all duration-500 ease-in-out"
-                                                style={{ width: `${okr.progress || 75}%` }}
+                                                style={{ width: `${(okr.progress || 0).toFixed(2)}%` }}
                                             />
                                         </div>
                                         <span className="text-[11px] font-bold text-gray-500 italic">
-                                            {okr.progress || 75}%
+                                            {(okr.progress || 0).toFixed(2)}%
                                         </span>
                                     </div>
                                 </TableCell>
@@ -167,11 +167,11 @@ export const OKRTable = ({ okrs }: OKRTableProps) => {
                                             <div className="w-full bg-gray-100 rounded-full h-1.5">
                                                 <div
                                                     className="bg-green-600 h-1.5 rounded-full transition-all duration-500"
-                                                    style={{ width: `${kr.progress || 0}%` }}
+                                                    style={{ width: `${(kr.progress || 0).toFixed(2)}%` }}
                                                 ></div>
                                             </div>
                                             <span className="text-[10px] text-gray-500 font-bold italic">
-                                                {Math.round(kr.progress || 0)}%
+                                                {(kr.progress || 0).toFixed(2)}%
                                             </span>
                                         </div>
                                     </TableCell>

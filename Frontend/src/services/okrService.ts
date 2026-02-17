@@ -259,9 +259,8 @@ const applyUpdateToReviewObject = (reviewObj: any, reviewData: any) => {
                         return kr;
                     });
 
-                    // Update Goal progressStatus based on average of children achievement
                     if (updatedGoal.children.length > 0) {
-                        updatedGoal.progressStatus = Math.round(totalKrAchievement / updatedGoal.children.length);
+                        updatedGoal.progressStatus = Number((totalKrAchievement / updatedGoal.children.length).toFixed(2));
                     }
                 }
             }
@@ -307,7 +306,7 @@ const applyUpdateToReviewObject = (reviewObj: any, reviewData: any) => {
                     totalKrAchievement += Math.min(100, ach);
                 });
                 if (updatedGoal.children.length > 0) {
-                    updatedGoal.progressStatus = Math.round(totalKrAchievement / updatedGoal.children.length);
+                    updatedGoal.progressStatus = Number((totalKrAchievement / updatedGoal.children.length).toFixed(2));
                 }
             }
             return updatedGoal;
@@ -317,18 +316,46 @@ const applyUpdateToReviewObject = (reviewObj: any, reviewData: any) => {
     // Merge Competency Updates
     const compUpdates = Array.isArray(reviewData.competencyReviews) ? reviewData.competencyReviews : [];
     if (compUpdates.length > 0) {
+        console.log("[DEBUG] Processing Competency Updates:", JSON.stringify(compUpdates));
         const updatedCompetencies = [...(finalReviewObj.competencies || [])];
         compUpdates.forEach((update: any) => {
             const uName = normalizeString(update.competencyName || update.name || "");
             if (!uName) return;
+
+            console.log(`[DEBUG] Trying to match competency: '${uName}'`);
+
             const matchComp = (cName: string) => {
                 const n = normalizeString(cName || "");
-                // Match exact, includes, or if either starts with the other
-                return n === uName || n.includes(uName) || uName.includes(n) ||
-                    n.replace(/[\s-]/g, '') === uName.replace(/[\s-]/g, '') ||
-                    n.replace(/skills?$/i, '').trim() === uName.replace(/skills?$/i, '').trim();
+
+                // Exact match
+                if (n === uName) return true;
+
+                // Contains match (either direction)
+                if (n.includes(uName) || uName.includes(n)) return true;
+
+                // Remove spaces and hyphens
+                if (n.replace(/[\s-]/g, '') === uName.replace(/[\s-]/g, '')) return true;
+
+                // Remove 'skills' suffix
+                if (n.replace(/skills?$/i, '').trim() === uName.replace(/skills?$/i, '').trim()) return true;
+
+                // Split by '&' and check if any part matches (for "Ownership & Accountability")
+                const nParts = n.split(/[&,]/).map(p => p.trim());
+                const uParts = uName.split(/[&,]/).map(p => p.trim());
+
+                for (const nPart of nParts) {
+                    for (const uPart of uParts) {
+                        if (nPart && uPart && (nPart.includes(uPart) || uPart.includes(nPart))) {
+                            return true;
+                        }
+                    }
+                }
+
+                return false;
             };
             const empIdx = updatedCompetencies.findIndex(c => c.type === 'employee' && matchComp(c.competencyName || c.title));
+            console.log(`[DEBUG] Employee Search Result for '${uName}': Index ${empIdx}`);
+
             if (empIdx !== -1) {
                 if (update.employeeRating !== undefined) updatedCompetencies[empIdx].Feedback = Math.round(Number(update.employeeRating));
                 const empCmt = update.employeeComment || update.employeeComments || update.employeeReason || update.selfComment || update.reason || update.comment;
@@ -338,6 +365,8 @@ const applyUpdateToReviewObject = (reviewObj: any, reviewData: any) => {
                 }
             }
             const mgrIdx = updatedCompetencies.findIndex(c => c.type === 'manager' && matchComp(c.competencyName || c.title));
+            console.log(`[DEBUG] Manager Search Result for '${uName}': Index ${mgrIdx}`);
+
             if (mgrIdx !== -1) {
                 if (update.managerRating !== undefined) updatedCompetencies[mgrIdx].Feedback = Math.round(Number(update.managerRating));
                 const mgrCmt = update.managerComment || update.managerComments || update.managerReason || update.supervisorComment || update.reason || update.comment;
@@ -346,8 +375,17 @@ const applyUpdateToReviewObject = (reviewObj: any, reviewData: any) => {
                     updatedCompetencies[mgrIdx].comments = String(mgrCmt).trim();
                 }
             }
+
+            // Log if no match was found
+            if (empIdx === -1 && mgrIdx === -1) {
+                console.warn(`[DEBUG] NO MATCH FOUND for competency: '${uName}'. Available competencies:`,
+                    updatedCompetencies.map(c => `${c.type}: ${c.competencyName || c.title}`));
+            }
         });
         finalReviewObj.competencies = updatedCompetencies;
+
+        // CRITICAL: Force immediate UI update for competencies
+        console.log("%c[COMPETENCY] Competencies updated, forcing UI refresh...", "color: magenta; font-weight: bold;");
     }
 
     // Recalculate Stats
@@ -379,7 +417,27 @@ const applyUpdateToReviewObject = (reviewObj: any, reviewData: any) => {
 
     finalReviewObj.employeesRating = Number(ea.toFixed(2));
     finalReviewObj.managersRating = Number(ma.toFixed(2));
-    finalReviewObj.overallRating = Number(((ea * 0.4) + (ma * 0.6)).toFixed(2));
+    const calculatedOverall = Number(((ea * 0.4) + (ma * 0.6)).toFixed(2));
+    finalReviewObj.overallRating = calculatedOverall;
+    finalReviewObj.overalRating = calculatedOverall; // Redundant field for typo compatibility
+    finalReviewObj.overall_rating = calculatedOverall; // Redundant snake_case
+
+    // Merge Qualitative Feedback (Accomplishments, Plans, Manager Comments)
+    // Structure strictly to match Report.tsx expectations: overallComments.cm1, cm2, cm3
+    if (!finalReviewObj.overallComments) finalReviewObj.overallComments = {};
+
+    if (reviewData.keyAccomplishments || reviewData.cm1) {
+        finalReviewObj.cm1 = reviewData.keyAccomplishments || reviewData.cm1;
+        finalReviewObj.overallComments.cm1 = finalReviewObj.cm1;
+    }
+    if (reviewData.nextQuarterPlan || reviewData.cm2) {
+        finalReviewObj.cm2 = reviewData.nextQuarterPlan || reviewData.cm2;
+        finalReviewObj.overallComments.cm2 = finalReviewObj.cm2;
+    }
+    if (reviewData.managerOverallComments || reviewData.cm3) {
+        finalReviewObj.managerOverallComments = reviewData.managerOverallComments || reviewData.cm3;
+        finalReviewObj.overallComments.cm3 = finalReviewObj.managerOverallComments;
+    }
 
     let totalAch = 0;
     if (finalReviewObj.goals) {
@@ -389,7 +447,10 @@ const applyUpdateToReviewObject = (reviewObj: any, reviewData: any) => {
             totalAch += (progress * weight) / 100;
         });
     }
-    finalReviewObj.totalAchievement = Math.min(100, Number(totalAch.toFixed(2)));
+    const finalAch = Math.min(100, Number(totalAch.toFixed(2)));
+    finalReviewObj.totalAchievement = finalAch;
+    finalReviewObj.total_achievement = finalAch;
+    finalReviewObj.totalAchivement = finalAch;
 
     return finalReviewObj;
 };
@@ -441,8 +502,14 @@ const optimisticUpdateCache = (reviewData: any) => {
  * Unified submission function for all review updates (OKR, Competency, Accomplishments, etc.)
  */
 export const submitReviewUpdate = async (updateData: any): Promise<boolean> => {
+    console.log("[DEBUG] submitReviewUpdate called with:", JSON.stringify(updateData, null, 2));
     // Optimistic Update: Update cache and trigger UI immediately
     optimisticUpdateCache(updateData);
+
+    // Force immediate UI refresh
+    setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('review-data-updated'));
+    }, 0);
 
     const result = await (updateMutex = updateMutex.then(async () => {
         try {
@@ -489,6 +556,18 @@ export const submitReviewUpdate = async (updateData: any): Promise<boolean> => {
             const cleanPayload = JSON.parse(JSON.stringify(finalReviewObj));
 
             // 5. Cleanup metadata for API
+            // CRITICAL FIX: Ensure ALL delta update fields are explicitly sent to the API
+            // The backend 'updateReviewForm' endpoint processes these delta arrays
+            if (updateData.objectiveReviews) cleanPayload.objectiveReviews = updateData.objectiveReviews;
+            if (updateData.keyResultReviews) cleanPayload.keyResultReviews = updateData.keyResultReviews;
+            if (updateData.competencyReviews) cleanPayload.competencyReviews = updateData.competencyReviews;
+            if (updateData.keyAccomplishments) cleanPayload.keyAccomplishments = updateData.keyAccomplishments;
+            if (updateData.cm1) cleanPayload.cm1 = updateData.cm1;
+            if (updateData.nextQuarterPlan) cleanPayload.nextQuarterPlan = updateData.nextQuarterPlan;
+            if (updateData.cm2) cleanPayload.cm2 = updateData.cm2;
+            if (updateData.managerOverallComments) cleanPayload.managerOverallComments = updateData.managerOverallComments;
+            if (updateData.cm3) cleanPayload.cm3 = updateData.cm3;
+
             ['__v', 'createdAt', 'updatedAt'].forEach(f => delete cleanPayload[f]);
             if (cleanPayload.companyId?._id) cleanPayload.companyId = String(cleanPayload.companyId._id);
             if (cleanPayload.employeeId?._id) cleanPayload.employeeId = String(cleanPayload.employeeId._id);
@@ -514,6 +593,7 @@ export const submitReviewUpdate = async (updateData: any): Promise<boolean> => {
             console.log(`[SYNC] Sending update using ${isManagerAction ? 'Manager' : 'Employee'} API Key.`);
             console.log(`[SYNC] API Key Info: ${apiKey ? (apiKey.substring(0, 8) + '...' + apiKey.substring(apiKey.length - 8)) : 'MISSING'} (Length: ${apiKey?.length || 0})`);
             console.log(`[SYNC] URL: ${url}`);
+            console.log(`%c[SYNC] PAYLOAD BEING SENT:`, "color: cyan; font-weight: bold;", JSON.stringify(cleanPayload, null, 2));
 
             const response = await fetch(url, {
                 method: 'PUT',
@@ -547,11 +627,17 @@ export const submitEmployeeSelfAssessment = (reviewData: any) => submitReviewUpd
 export const submitCompetencyReview = (reviewData: any) => submitReviewUpdate(reviewData);
 
 export const updateKeyResult = async (id: string, currentValue: string): Promise<boolean> => {
+    console.log(`[DEBUG] updateKeyResult called. ID: ${id}, Value: ${currentValue}`);
     // Optimistic Update for report view
     if (cachedReviewForm && cachedReviewForm.data) {
         // Sync to review form goals children immediately
         const dummyReviewData = { keyResultReviews: [{ id, actual: Number(currentValue) }] };
         optimisticUpdateCache(dummyReviewData);
+
+        // Force immediate UI refresh
+        setTimeout(() => {
+            window.dispatchEvent(new CustomEvent('review-data-updated'));
+        }, 0);
     }
 
     const apiKey = import.meta.env.VITE_EMPLOYEE_API_KEY;
@@ -576,10 +662,10 @@ export const updateKeyResult = async (id: string, currentValue: string): Promise
         }
 
         if (fullKeyResultObj) {
-            fullKeyResultObj.actual = parseInt(currentValue, 10);
+            fullKeyResultObj.actual = Number(currentValue); // Changed from parseInt to Number for decimal support
             fullKeyResultObj.updatedAt = new Date().toISOString();
         } else {
-            fullKeyResultObj = { actual: currentValue };
+            fullKeyResultObj = { actual: Number(currentValue) };
         }
 
         const url = `${updateUrlBase}/${id}?companyId=${companyId}`;
@@ -590,11 +676,15 @@ export const updateKeyResult = async (id: string, currentValue: string): Promise
         });
 
         if (response.ok) {
+            console.log(`[OKR UPDATE] SUCCESS for ID: ${id}. Status: ${response.status}`);
             if (objectiveIndex !== -1 && krIndex !== -1) {
                 okrCache[objectiveIndex].children[krIndex] = { ...okrCache[objectiveIndex].children[krIndex], ...fullKeyResultObj };
             }
             window.dispatchEvent(new CustomEvent('review-data-updated'));
             return true;
+        } else {
+            const errText = await response.text();
+            console.error(`[OKR UPDATE] FAILED for ID: ${id}. Status: ${response.status}. Response: ${errText}`);
         }
         return false;
     } catch (error) {

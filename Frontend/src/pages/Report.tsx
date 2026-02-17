@@ -272,7 +272,7 @@ const Report = () => {
             // Calculate KR progress: (Current / Target) * 100
             let krProgress = target > 0 ? (current / target) * 100 : 0;
             // Cap at 100% and ensure non-negative
-            krProgress = Math.min(100, Math.max(0, krProgress));
+            krProgress = Number((Math.min(100, Math.max(0, krProgress))).toFixed(2));
 
             return {
                 id: kr._id || kr.id || Math.random().toString(36).substr(2, 9),

@@ -2,11 +2,11 @@ import Vapi from '@vapi-ai/web';
 import { OKR } from './okrService';
 
 // Vapi configuration
-const VAPI_PUBLIC_KEY = import.meta.env.VITE_VOICE_AGENT_PUBLIC_KEY || '2e98bedc-bb4f-4662-9d5c-013841be5643';
+const VAPI_PUBLIC_KEY = import.meta.env.VITE_VOICE_AGENT_PUBLIC_KEY || '14d3aa24-ca7f-48de-be8d-c0bd39c75d0f';
 console.log('Initializing Vapi with Public Key:', VAPI_PUBLIC_KEY);
 
 // Your Assistant ID from Vapi
-const VAPI_ASSISTANT_ID = import.meta.env.VITE_VAPI_ASSISTANT_ID || '416bb3db-da61-4512-aca3-1002b4b5d13f';
+const VAPI_ASSISTANT_ID = import.meta.env.VITE_VAPI_ASSISTANT_ID || '43d3bb67-ade8-403d-87ba-0d00c5ff991f';
 
 // Initialize Vapi instance
 let vapiInstance: Vapi | null = null;
