@@ -134,7 +134,7 @@ export const VapiVoiceInterface = () => {
                 setEmployeeConsent(false);
                 setEmployeeName('');
                 setManagerName('');
-            }, 3000); // Show for 3 seconds
+            }, 20000); // Show for 20 seconds
             return () => clearTimeout(timer);
         }
     }, [showThankYou]);

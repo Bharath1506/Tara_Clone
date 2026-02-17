@@ -310,7 +310,7 @@ export const useVapi = () => {
                         } else if (toolName === 'end_session') {
                             result = "Ending session.";
                             vapi.send({ type: 'tool-output', toolCallId: toolCall.id, output: result } as any);
-                            setTimeout(() => vapi.stop(), 3000);
+                            setTimeout(() => vapi.stop(), 20000);
                         } else {
                             result = `Unknown tool: ${toolName}`;
                             vapi.send({ type: 'tool-output', toolCallId: toolCall.id, output: result } as any);
@@ -434,7 +434,7 @@ export const useVapi = () => {
                         type: 'add-message',
                         message: {
                             role: 'system',
-                            content: "Extended silence. Please conclude the session calmly and politely, then call the end_session tool."
+                            content: "Extended silence. Please inform the participants that the session will remain active until they choose to end it."
                         }
                     } as any);
                     return;
