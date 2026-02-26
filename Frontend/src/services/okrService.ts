@@ -367,13 +367,17 @@ const applyUpdateToReviewObject = (reviewObj: any, reviewData: any) => {
                     updatedCompetencies[empIdx].Feedback = empRating;
                     updatedCompetencies[empIdx].feedback = empRating;
                     updatedCompetencies[empIdx].rating = empRating;
+                    updatedCompetencies[empIdx].Rating = empRating;
                     updatedCompetencies[empIdx].score = empRating;
                 }
-                const empCmt = update.employeeComment || update.employeeComments || update.employeeReason || update.selfComment || update.reason || update.comment;
+                const empCmt = update.employeeComment || update.employeeComments || update.employeeReason || update.selfComment || update.reason || update.comment || update.Comments || update.Comment;
                 if (empCmt) {
-                    updatedCompetencies[empIdx].Comments = String(empCmt).trim();
-                    updatedCompetencies[empIdx].comments = String(empCmt).trim();
-                    updatedCompetencies[empIdx].Comment = String(empCmt).trim();
+                    const cmt = String(empCmt).trim();
+                    updatedCompetencies[empIdx].Comments = cmt;
+                    updatedCompetencies[empIdx].comments = cmt;
+                    updatedCompetencies[empIdx].Comment = cmt;
+                    updatedCompetencies[empIdx].comment = cmt;
+                    updatedCompetencies[empIdx].feedback_text = cmt;
                 }
             }
             const mgrIdx = updatedCompetencies.findIndex(c => c.type === 'manager' && matchComp(c.competencyName || c.title));
@@ -387,13 +391,17 @@ const applyUpdateToReviewObject = (reviewObj: any, reviewData: any) => {
                     updatedCompetencies[mgrIdx].Feedback = mgrRating;
                     updatedCompetencies[mgrIdx].feedback = mgrRating;
                     updatedCompetencies[mgrIdx].rating = mgrRating;
+                    updatedCompetencies[mgrIdx].Rating = mgrRating;
                     updatedCompetencies[mgrIdx].score = mgrRating;
                 }
-                const mgrCmt = update.managerComment || update.managerComments || update.managerReason || update.supervisorComment || update.reason || update.comment;
+                const mgrCmt = update.managerComment || update.managerComments || update.managerReason || update.supervisorComment || update.reason || update.comment || update.Comments || update.Comment;
                 if (mgrCmt) {
-                    updatedCompetencies[mgrIdx].Comments = String(mgrCmt).trim();
-                    updatedCompetencies[mgrIdx].comments = String(mgrCmt).trim();
-                    updatedCompetencies[mgrIdx].Comment = String(mgrCmt).trim();
+                    const cmt = String(mgrCmt).trim();
+                    updatedCompetencies[mgrIdx].Comments = cmt;
+                    updatedCompetencies[mgrIdx].comments = cmt;
+                    updatedCompetencies[mgrIdx].Comment = cmt;
+                    updatedCompetencies[mgrIdx].comment = cmt;
+                    updatedCompetencies[mgrIdx].feedback_text = cmt;
                 }
             }
 
@@ -645,7 +653,44 @@ export const submitReviewUpdate = async (updateData: any): Promise<boolean> => {
             // The backend 'updateReviewForm' endpoint processes these delta arrays
             if (updateData.objectiveReviews) cleanPayload.objectiveReviews = updateData.objectiveReviews;
             if (updateData.keyResultReviews) cleanPayload.keyResultReviews = updateData.keyResultReviews;
-            if (updateData.competencyReviews) cleanPayload.competencyReviews = updateData.competencyReviews;
+            if (updateData.competencyReviews) {
+                // Map competency names to IDs and ensure all field variants are present in the delta
+                cleanPayload.competencyReviews = updateData.competencyReviews.map((u: any) => {
+                    const mappedUpdate = { ...u };
+                    const uName = normalizeString(u.competencyName || u.name || "");
+
+                    // Look for the ID of the matched competency in the final object
+                    const matchedComp = finalReviewObj.competencies?.find((c: any) => {
+                        const n = normalizeString(c.competencyName || c.title || "");
+                        return n === uName || n.includes(uName) || uName.includes(n);
+                    });
+
+                    if (matchedComp && (matchedComp._id || matchedComp.id)) {
+                        mappedUpdate.id = matchedComp._id || matchedComp.id;
+                        mappedUpdate._id = matchedComp._id || matchedComp.id;
+                    }
+
+                    // Add rating variants to delta
+                    const rValue = u.employeeRating ?? u.managerRating ?? u.rating ?? u.Feedback ?? u.score ?? 0;
+                    if (rValue > 0) {
+                        mappedUpdate.Rating = rValue;
+                        mappedUpdate.rating = rValue;
+                        mappedUpdate.score = rValue;
+                        mappedUpdate.Feedback = rValue;
+                    }
+
+                    // Add comment variants to delta
+                    const cValue = u.employeeComments ?? u.managerComments ?? u.comment ?? u.Comments ?? u.Comment;
+                    if (cValue) {
+                        mappedUpdate.comment = cValue;
+                        mappedUpdate.Comments = cValue;
+                        mappedUpdate.Comment = cValue;
+                        mappedUpdate.comments = cValue;
+                    }
+
+                    return mappedUpdate;
+                });
+            }
             if (updateData.keyAccomplishments) cleanPayload.keyAccomplishments = updateData.keyAccomplishments;
             if (updateData.cm1) cleanPayload.cm1 = updateData.cm1;
             if (updateData.nextQuarterPlan) cleanPayload.nextQuarterPlan = updateData.nextQuarterPlan;
