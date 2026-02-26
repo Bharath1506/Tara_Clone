@@ -306,19 +306,32 @@ const Report = () => {
     const competencies = reviewData.competencies || [];
     const competencyOrder = ["Ownership & Accountability", "Professionalism", "Customer Focus", "Leadership", "Collaboration"];
 
+    const getCompetencyScore = (comp: any): number => {
+        if (!comp) return 0;
+        // Check multiple possible field names the backend might use
+        const raw = comp.Feedback ?? comp.feedback ?? comp.rating ?? comp.score ?? comp.Rating ?? 0;
+        const parsed = parseFloat(String(raw));
+        return !isNaN(parsed) ? Math.round(parsed) : 0;
+    };
+
+    const getCompetencyComment = (comp: any): string => {
+        if (!comp) return '';
+        return comp.Comments || comp.comments || comp.Comment || comp.comment || comp.feedback_text || '';
+    };
+
     const competencyData = competencyOrder.map(name => {
         const selfComp = competencies.find((c: any) => c.type === 'employee' && (c.competencyName === name || c.title === name));
         const mgrComp = competencies.find((c: any) => c.type === 'manager' && (c.competencyName === name || c.title === name));
-        const selfScore = !isNaN(parseFloat(selfComp?.Feedback)) ? Math.round(parseFloat(selfComp.Feedback)) : 0;
-        const mgrScore = !isNaN(parseFloat(mgrComp?.Feedback)) ? Math.round(parseFloat(mgrComp.Feedback)) : 0;
+        const selfScore = getCompetencyScore(selfComp);
+        const mgrScore = getCompetencyScore(mgrComp);
         return {
             subject: name,
             self: selfScore,
             manager: mgrScore,
             average: (selfScore + mgrScore) / 2,
             fullMark: 5,
-            selfComment: selfComp?.Comments || selfComp?.comments || '',
-            managerComment: mgrComp?.Comments || mgrComp?.comments || ''
+            selfComment: getCompetencyComment(selfComp),
+            managerComment: getCompetencyComment(mgrComp)
         };
     });
 
@@ -388,9 +401,16 @@ const Report = () => {
     const stats = calculateDetailedStats();
 
     const calculatedOverallRating = Number(((stats.okrCombined * 0.6) + (stats.compCombined * 0.4)).toFixed(2));
-    // Use calculated rating if available, fallback to stored rating only if calculation yields 0 (and stored is not).
-    // Actually, prefer calculated generally as it's real-time based on items.
-    const ratingValue = calculatedOverallRating > 0 ? calculatedOverallRating : parseFloat(reviewData.overallRating || '0');
+
+    // Primary Source of Truth for Report UI is now the CALCULATED rating.
+    // This ensures consistency between the breakdown items and the total shown.
+    const ratingValue = calculatedOverallRating > 0 ? calculatedOverallRating : parseFloat(
+        String(reviewData.overallRating ?? reviewData.overalRating ?? reviewData.overall_rating ?? 0)
+    );
+
+    const dbStoredRating = parseFloat(
+        String(reviewData.overallRating ?? reviewData.overalRating ?? reviewData.overall_rating ?? 0)
+    );
 
     const sentiment = getSentiment(ratingValue);
 
@@ -523,11 +543,16 @@ const Report = () => {
                                     <TooltipContent className="bg-white border text-gray-700 shadow-xl p-4 max-w-[300px]">
                                         <div className="space-y-3">
                                             <div>
-                                                <p className="font-bold text-xs mb-1 text-gray-900 border-b pb-1">Calculation Formula</p>
-                                                <p className="text-xs font-mono text-gray-600 mt-1">(OKR Avg × 60%) + (Comp Avg × 40%)</p>
+                                                <p className="font-bold text-xs mb-1 text-gray-900 border-b pb-1">Rating Source</p>
+                                                <p className="text-xs text-gray-600 mt-1">
+                                                    {Math.abs(calculatedOverallRating - dbStoredRating) < 0.01 && dbStoredRating > 0
+                                                        ? <span className="text-green-700 font-semibold">✓ In Sync with Database</span>
+                                                        : <span className="text-amber-700 font-semibold">Calculated from items (Real-time)</span>
+                                                    }
+                                                </p>
                                             </div>
                                             <div>
-                                                <p className="font-bold text-xs mb-1 text-gray-900 border-b pb-1">Component Averages</p>
+                                                <p className="font-bold text-xs mb-1 text-gray-900 border-b pb-1">Formula: (OKR Avg × 60%) + (Comp Avg × 40%)</p>
                                                 <div className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-xs mt-1">
                                                     <span className="text-gray-500">OKR Combined:</span>
                                                     <span className="font-mono">{stats.okrCombined}</span>
@@ -538,9 +563,12 @@ const Report = () => {
                                                     <span className="text-gray-500 italic pl-2 text-[10px]">- Emp: {stats.empCompAvg}, Mgr: {stats.mgrCompAvg}</span>
                                                 </div>
                                             </div>
-                                            <div className="pt-2 border-t border-dashed">
+                                            <div className="pt-2 border-t border-dashed space-y-1">
+                                                {dbStoredRating > 0 && (
+                                                    <p className="text-xs text-gray-600">DB Stored: <span className="font-mono font-bold">{dbStoredRating.toFixed(2)}</span></p>
+                                                )}
                                                 <p className="text-xs font-mono text-gray-800">
-                                                    ({stats.okrCombined} × 0.6) + ({stats.compCombined} × 0.4) = <span className="font-bold text-[#7a8f4b]">{ratingValue.toFixed(2)}</span>
+                                                    Calculated: ({stats.okrCombined} × 0.6) + ({stats.compCombined} × 0.4) = <span className="font-bold text-[#7a8f4b]">{calculatedOverallRating.toFixed(2)}</span>
                                                 </p>
                                             </div>
                                         </div>

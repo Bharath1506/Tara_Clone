@@ -271,11 +271,14 @@ const applyUpdateToReviewObject = (reviewObj: any, reviewData: any) => {
             );
 
             if (objUpdate) {
-                if (objUpdate.employeeRating !== undefined) updatedGoal.employeeRating = Number(objUpdate.employeeRating);
-                if (objUpdate.managerRating !== undefined) updatedGoal.managerRating = Number(objUpdate.managerRating);
-                // OKR reasons are no longer saved
-                // if (objUpdate.employeeFeedback !== undefined) updatedGoal.employeeFeedback = objUpdate.employeeFeedback;
-                // if (objUpdate.managerFeedback !== undefined) updatedGoal.managerFeedback = objUpdate.managerFeedback;
+                if (objUpdate.employeeRating !== undefined) {
+                    const r = Number(objUpdate.employeeRating);
+                    updatedGoal.employeeRating = !isNaN(r) ? Math.round(Math.max(0, Math.min(5, r))) : 0;
+                }
+                if (objUpdate.managerRating !== undefined) {
+                    const r = Number(objUpdate.managerRating);
+                    updatedGoal.managerRating = !isNaN(r) ? Math.round(Math.max(0, Math.min(5, r))) : 0;
+                }
             }
 
             if (Array.isArray(updatedGoal.children)) {
@@ -357,22 +360,40 @@ const applyUpdateToReviewObject = (reviewObj: any, reviewData: any) => {
             console.log(`[DEBUG] Employee Search Result for '${uName}': Index ${empIdx}`);
 
             if (empIdx !== -1) {
-                if (update.employeeRating !== undefined) updatedCompetencies[empIdx].Feedback = Math.round(Number(update.employeeRating));
+                const r = Number(update.employeeRating);
+                if (update.employeeRating !== undefined && !isNaN(r)) {
+                    const empRating = Math.round(Math.max(0, Math.min(5, r)));
+                    // Write to all possible field name variants for DB compatibility
+                    updatedCompetencies[empIdx].Feedback = empRating;
+                    updatedCompetencies[empIdx].feedback = empRating;
+                    updatedCompetencies[empIdx].rating = empRating;
+                    updatedCompetencies[empIdx].score = empRating;
+                }
                 const empCmt = update.employeeComment || update.employeeComments || update.employeeReason || update.selfComment || update.reason || update.comment;
                 if (empCmt) {
                     updatedCompetencies[empIdx].Comments = String(empCmt).trim();
                     updatedCompetencies[empIdx].comments = String(empCmt).trim();
+                    updatedCompetencies[empIdx].Comment = String(empCmt).trim();
                 }
             }
             const mgrIdx = updatedCompetencies.findIndex(c => c.type === 'manager' && matchComp(c.competencyName || c.title));
             console.log(`[DEBUG] Manager Search Result for '${uName}': Index ${mgrIdx}`);
 
             if (mgrIdx !== -1) {
-                if (update.managerRating !== undefined) updatedCompetencies[mgrIdx].Feedback = Math.round(Number(update.managerRating));
+                const r = Number(update.managerRating);
+                if (update.managerRating !== undefined && !isNaN(r)) {
+                    const mgrRating = Math.round(Math.max(0, Math.min(5, r)));
+                    // Write to all possible field name variants for DB compatibility
+                    updatedCompetencies[mgrIdx].Feedback = mgrRating;
+                    updatedCompetencies[mgrIdx].feedback = mgrRating;
+                    updatedCompetencies[mgrIdx].rating = mgrRating;
+                    updatedCompetencies[mgrIdx].score = mgrRating;
+                }
                 const mgrCmt = update.managerComment || update.managerComments || update.managerReason || update.supervisorComment || update.reason || update.comment;
                 if (mgrCmt) {
                     updatedCompetencies[mgrIdx].Comments = String(mgrCmt).trim();
                     updatedCompetencies[mgrIdx].comments = String(mgrCmt).trim();
+                    updatedCompetencies[mgrIdx].Comment = String(mgrCmt).trim();
                 }
             }
 
@@ -388,39 +409,77 @@ const applyUpdateToReviewObject = (reviewObj: any, reviewData: any) => {
         console.log("%c[COMPETENCY] Competencies updated, forcing UI refresh...", "color: magenta; font-weight: bold;");
     }
 
-    // Recalculate Stats
-    const getRatingList = (type: 'employee' | 'manager') => {
+    // Recalculate Stats using the SAME formula as Report.tsx:
+    // Overall = (OKR_combined × 0.6) + (Comp_combined × 0.4)
+    // OKR_combined  = avg(empOkrAvg, mgrOkrAvg)  — objectives only
+    // Comp_combined = avg(empCompAvg, mgrCompAvg) — competencies only
+
+    const getOkrRatings = (role: 'employee' | 'manager'): number[] => {
+        const field = role === 'employee' ? 'employeeRating' : 'managerRating';
         const list: number[] = [];
-        const field = type === 'employee' ? 'employeeRating' : 'managerRating';
         if (finalReviewObj.goals) {
             finalReviewObj.goals.forEach((g: any) => {
-                if (g[field] && !isNaN(Number(g[field])) && Number(g[field]) > 0) list.push(Number(g[field]));
-                if (g.children) {
-                    g.children.forEach((kr: any) => {
-                        if (kr[field] && !isNaN(Number(kr[field])) && Number(kr[field]) > 0) list.push(Number(kr[field]));
-                    });
-                }
-            });
-        }
-        if (finalReviewObj.competencies) {
-            finalReviewObj.competencies.forEach((c: any) => {
-                if (c.type === type && c.Feedback && !isNaN(Number(c.Feedback)) && Number(c.Feedback) > 0) list.push(Number(c.Feedback));
+                const v = Math.round(Number(g[field] || 0));
+                if (v > 0) list.push(v);
             });
         }
         return list;
     };
 
-    const er = getRatingList('employee');
-    const mr = getRatingList('manager');
-    const ea = er.length ? (er.reduce((a, b) => a + b, 0) / er.length) : 0;
-    const ma = mr.length ? (mr.reduce((a, b) => a + b, 0) / mr.length) : 0;
+    const getCompRatings = (role: 'employee' | 'manager'): number[] => {
+        const list: number[] = [];
+        if (finalReviewObj.competencies) {
+            finalReviewObj.competencies.forEach((c: any) => {
+                if (c.type !== role) return;
+                // Read from all possible field name variants
+                const raw = c.Feedback ?? c.feedback ?? c.rating ?? c.score ?? 0;
+                const v = Math.round(Number(raw));
+                if (v > 0) list.push(v);
+            });
+        }
+        return list;
+    };
 
-    finalReviewObj.employeesRating = Number(ea.toFixed(2));
-    finalReviewObj.managersRating = Number(ma.toFixed(2));
-    const calculatedOverall = Number(((ea * 0.4) + (ma * 0.6)).toFixed(2));
+    const avg = (list: number[]) => list.length ? list.reduce((a, b) => a + b, 0) / list.length : 0;
+
+    const empOkrRatings = getOkrRatings('employee');
+    const mgrOkrRatings = getOkrRatings('manager');
+    const empCompRatings = getCompRatings('employee');
+    const mgrCompRatings = getCompRatings('manager');
+
+    const empOkrAvg = avg(empOkrRatings);
+    const mgrOkrAvg = avg(mgrOkrRatings);
+    const empCompAvg = avg(empCompRatings);
+    const mgrCompAvg = avg(mgrCompRatings);
+
+    // Combined: if both sides rated, take their average; if only one side, use that alone
+    const okrCombined = (empOkrAvg > 0 && mgrOkrAvg > 0)
+        ? (empOkrAvg + mgrOkrAvg) / 2
+        : (empOkrAvg + mgrOkrAvg);
+
+    const compCombined = (empCompAvg > 0 && mgrCompAvg > 0)
+        ? (empCompAvg + mgrCompAvg) / 2
+        : (empCompAvg + mgrCompAvg);
+
+    // Final weighted overall rating
+    const calculatedOverall = Number(((okrCombined * 0.6) + (compCombined * 0.4)).toFixed(2));
+
+    // Store breakdown fields for transparency
+    finalReviewObj.employeesRating = Number(empOkrAvg.toFixed(2));
+    finalReviewObj.managersRating = Number(mgrOkrAvg.toFixed(2));
+    finalReviewObj.employeeCompAvg = Number(empCompAvg.toFixed(2));
+    finalReviewObj.managerCompAvg = Number(mgrCompAvg.toFixed(2));
+    finalReviewObj.okrCombined = Number(okrCombined.toFixed(2));
+    finalReviewObj.compCombined = Number(compCombined.toFixed(2));
+
+    // Save to all field variants for DB compatibility
     finalReviewObj.overallRating = calculatedOverall;
-    finalReviewObj.overalRating = calculatedOverall; // Redundant field for typo compatibility
-    finalReviewObj.overall_rating = calculatedOverall; // Redundant snake_case
+    finalReviewObj.overalRating = calculatedOverall;   // typo-compat
+    finalReviewObj.overall_rating = calculatedOverall;  // snake_case compat
+    finalReviewObj.overallScore = calculatedOverall;
+    finalReviewObj.overall_score = calculatedOverall;
+
+    console.log(`%c[RATING CALC] OKR: emp=${empOkrAvg.toFixed(2)}, mgr=${mgrOkrAvg.toFixed(2)}, combined=${okrCombined.toFixed(2)} | Comp: emp=${empCompAvg.toFixed(2)}, mgr=${mgrCompAvg.toFixed(2)}, combined=${compCombined.toFixed(2)} | Overall=${calculatedOverall}`, "color: cyan; font-weight: bold;");
 
     // Merge Qualitative Feedback (Accomplishments, Plans, Manager Comments)
     // Structure strictly to match Report.tsx expectations: overallComments.cm1, cm2, cm3
@@ -553,7 +612,33 @@ export const submitReviewUpdate = async (updateData: any): Promise<boolean> => {
 
             // 4. Apply updates locally to create the final payload
             const finalReviewObj = applyUpdateToReviewObject(reviewObj, updateData);
+
+            // Force manager name consistency for Madhavi Peddireddy as per Report.tsx
+            const isMadhavi = String(import.meta.env.VITE_MANAGER_REVIEW_FORM_API_URL || "").includes("68e49939df33a7c9177aaf03");
+            if (isMadhavi) {
+                finalReviewObj.managerName = "Madhavi peddireddy";
+            }
+
             const cleanPayload = JSON.parse(JSON.stringify(finalReviewObj));
+
+            // CRITICAL: Ensure Overall Rating is at the TOP LEVEL of the update payload
+            // We use multiple variants to ensure the backend captures it
+            const finalScore = finalReviewObj.overallRating;
+            cleanPayload.overallRating = finalScore;
+            cleanPayload.overalRating = finalScore;
+            cleanPayload.overallScore = finalScore;
+            cleanPayload.overall_rating = finalScore;
+            cleanPayload.overall_score = finalScore;
+            cleanPayload.Rating = finalScore;
+            cleanPayload.final_score = finalScore;
+
+            cleanPayload.employeesRating = finalReviewObj.employeesRating;
+            cleanPayload.managersRating = finalReviewObj.managersRating;
+            cleanPayload.totalAchievement = finalReviewObj.totalAchievement;
+            cleanPayload.total_achievement = finalReviewObj.totalAchievement;
+
+            console.log(`%c[SYNC] Final Overall Rating to DB: ${finalScore}`, "color: white; background: green; padding: 2px 5px; border-radius: 3px; font-weight: bold;");
+            console.log(`%c[SYNC] Payload Summary: OKR Combined=${finalReviewObj.okrCombined}, Comp Combined=${finalReviewObj.compCombined}, Total Ach=${finalReviewObj.totalAchievement}%`, "color: green;");
 
             // 5. Cleanup metadata for API
             // CRITICAL FIX: Ensure ALL delta update fields are explicitly sent to the API
@@ -567,6 +652,13 @@ export const submitReviewUpdate = async (updateData: any): Promise<boolean> => {
             if (updateData.cm2) cleanPayload.cm2 = updateData.cm2;
             if (updateData.managerOverallComments) cleanPayload.managerOverallComments = updateData.managerOverallComments;
             if (updateData.cm3) cleanPayload.cm3 = updateData.cm3;
+
+            // Ensure calculated ratings are also at top level if not already
+            cleanPayload.overallRating = finalReviewObj.overallRating;
+            cleanPayload.overallScore = finalReviewObj.overallScore;
+            cleanPayload.employeesRating = finalReviewObj.employeesRating;
+            cleanPayload.managersRating = finalReviewObj.managersRating;
+            cleanPayload.totalAchievement = finalReviewObj.totalAchievement;
 
             ['__v', 'createdAt', 'updatedAt'].forEach(f => delete cleanPayload[f]);
             if (cleanPayload.companyId?._id) cleanPayload.companyId = String(cleanPayload.companyId._id);
@@ -582,7 +674,12 @@ export const submitReviewUpdate = async (updateData: any): Promise<boolean> => {
                 (updateData.supervisorComment !== undefined) ||
                 (updateData.objectiveReviews?.some((o: any) => o.managerRating !== undefined || o.managerFeedback !== undefined)) ||
                 (updateData.keyResultReviews?.some((k: any) => k.managerRating !== undefined || k.managerFeedback !== undefined)) ||
-                (updateData.competencyReviews?.some((c: any) => c.managerRating !== undefined || c.managerComments !== undefined || c.manager_comments !== undefined));
+                (updateData.competencyReviews?.some((c: any) =>
+                    c.managerRating !== undefined ||
+                    c.managerComments !== undefined ||
+                    c.managerComment !== undefined ||
+                    c.manager_comments !== undefined
+                ));
 
             const apiKey = isManagerAction
                 ? (import.meta.env.VITE_MANAGER_API_KEY || import.meta.env.VITE_EMPLOYEE_API_KEY)
