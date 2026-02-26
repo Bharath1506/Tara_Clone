@@ -235,10 +235,9 @@ export const useVapi = () => {
                                 if (typeLower === 'objective') {
                                     const objReview: any = { id, objectiveName: name };
                                     if (rating !== undefined) objReview[ratingKey] = rating;
-                                    // OKR reasons are no longer sent
-                                    // if (comment !== undefined) objReview[`${role}Feedback`] = comment;
+                                    if (comment !== undefined) objReview[`${role}Feedback`] = comment;
                                     updateData.objectiveReviews = [objReview];
-                                    console.log(`[VAPI TOOL] Preparing objective review update (Rating Only):`, objReview);
+                                    console.log(`[VAPI TOOL] Preparing objective review update:`, objReview);
                                 } else if (typeLower === 'key_result' || typeLower === 'kr') {
                                     const krReview: any = { id, keyResultName: name };
                                     if (rating !== undefined) krReview[ratingKey] = rating;

@@ -24,8 +24,6 @@ interface KeyResult {
     target: string;
     current: string;
     metrics: string;
-    employeeRating: number;
-    managerRating: number;
     progress?: number;
     dueDate?: string;
     weight?: number;
@@ -176,10 +174,8 @@ export const OKRTable = ({ okrs }: OKRTableProps) => {
                                         </div>
                                     </TableCell>
                                     <TableCell className="py-4 px-6">
-                                        <StarRating rating={kr.employeeRating} />
                                     </TableCell>
                                     <TableCell className="py-4 px-6">
-                                        <StarRating rating={kr.managerRating} />
                                     </TableCell>
                                 </TableRow>
                             ))}

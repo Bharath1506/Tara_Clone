@@ -280,9 +280,7 @@ const Report = () => {
                 target: String(target),
                 current: String(current),
                 progress: krProgress,
-                metrics: String(kr.unit || kr.uom || ''),
-                employeeRating: !isNaN(parseFloat(kr.employeeRating)) ? Math.round(parseFloat(kr.employeeRating)) : 0,
-                managerRating: !isNaN(parseFloat(kr.managerRating)) ? Math.round(parseFloat(kr.managerRating)) : 0
+                metrics: String(kr.unit || kr.uom || '')
             };
         });
 
@@ -356,10 +354,7 @@ const Report = () => {
                 contribution: Number(contribution.toFixed(2))
             });
 
-            okr.keyResults.forEach(kr => {
-                if (kr.employeeRating > 0) empOkrRatings.push(Number(kr.employeeRating));
-                if (kr.managerRating > 0) mgrOkrRatings.push(Number(kr.managerRating));
-            });
+            // Key Result ratings are no longer collected — only Objective ratings count
         });
 
         // 2. Competencies
