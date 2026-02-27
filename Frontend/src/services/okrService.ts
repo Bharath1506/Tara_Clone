@@ -573,27 +573,22 @@ export const submitReviewUpdate = async (updateData: any): Promise<boolean> => {
     // Optimistic Update: Update cache and trigger UI immediately
     optimisticUpdateCache(updateData);
 
-    // Force immediate UI refresh
-    setTimeout(() => {
-        window.dispatchEvent(new CustomEvent('review-data-updated'));
-    }, 0);
-
-    const result = await (updateMutex = updateMutex.then(async () => {
+    console.log(`[SYNC] Update added to background queue... Queueing update for:`, Object.keys(updateData));
+    const syncPromise = (updateMutex = updateMutex.then(async () => {
         try {
-            console.log("%c[SUBMISSION] Starting Review Sync...", "color: cyan; font-weight: bold;");
+            console.log("%c[SUBMISSION] Sync Task Started - Hitting Network...", "color: white; background: #2196F3; padding: 2px 5px; border-radius: 3px;");
 
             // 1. Ensure OKR cache is warm (for initialization if needed)
             if (okrCache.length === 0) await fetchEmployeeOKRs();
 
-            // 2. Get latest review form data
+            // 2. Get review form data - Use cache if available and not too old
             const fullReviewData = await getFreshReviewForm();
             if (!fullReviewData || !fullReviewData.data) {
                 console.error("[SUBMISSION] Failed to get fresh review form");
                 return false;
             }
 
-            // 3. Find the correct review object
-            const providedId = (updateData.id || updateData._id || "").trim();
+            // 3. Prepare data array
             let reviewDataArray = Array.isArray(fullReviewData.data) ? fullReviewData.data :
                 (fullReviewData.data?.review ? [fullReviewData.data.review] :
                     (fullReviewData.data?.data ? (Array.isArray(fullReviewData.data.data) ? fullReviewData.data.data : [fullReviewData.data.data]) :
@@ -601,22 +596,37 @@ export const submitReviewUpdate = async (updateData: any): Promise<boolean> => {
 
             reviewDataArray = reviewDataArray.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
+            // 4. Resolve the targeted review object from cache or fresh data
+            const providedId = (updateData.id || updateData._id || "").trim();
             let reviewObj = reviewDataArray.find((r: any) =>
                 providedId && (String(r._id).toLowerCase() === providedId.toLowerCase() || String(r.id).toLowerCase() === providedId.toLowerCase())
             );
 
             if (!reviewObj) {
-                console.warn("[SYNC] No matching review found for update. Attempting fallback...");
                 const sessionEmpName = updateData.employeeFullName || '';
                 reviewObj = reviewDataArray.find((r: any) => sessionEmpName && normalizeString(r.employeeFullName).includes(normalizeString(sessionEmpName)));
             }
+
+            // If still not found, try one last fetch with force to ensure we didn't miss a new review
+            if (!reviewObj && !providedId) {
+                console.log("[SYNC] Review not found in cache, forcing fresh fetch...");
+                const freshData = await getFreshReviewForm(true);
+                if (freshData && freshData.data) {
+                    const freshArray = Array.isArray(freshData.data) ? freshData.data : [freshData.data];
+                    reviewObj = freshArray[0];
+                }
+            }
+
             if (!reviewObj) {
                 reviewObj = reviewDataArray.find((r: any) => r.employeeId === '68e240b0d9876d59139672d6') || reviewDataArray[0];
             }
+
             if (!reviewObj) {
                 console.error("[SYNC] CRITICAL: Could not resolve a review object to update.");
                 return false;
             }
+
+            console.log(`[SYNC] Updating review ${reviewObj._id} for ${reviewObj.employeeFullName}`);
 
             // 4. Apply updates locally to create the final payload
             const finalReviewObj = applyUpdateToReviewObject(reviewObj, updateData);
@@ -648,55 +658,98 @@ export const submitReviewUpdate = async (updateData: any): Promise<boolean> => {
             console.log(`%c[SYNC] Final Overall Rating to DB: ${finalScore}`, "color: white; background: green; padding: 2px 5px; border-radius: 3px; font-weight: bold;");
             console.log(`%c[SYNC] Payload Summary: OKR Combined=${finalReviewObj.okrCombined}, Comp Combined=${finalReviewObj.compCombined}, Total Ach=${finalReviewObj.totalAchievement}%`, "color: green;");
 
-            // 5. Cleanup metadata for API
-            // CRITICAL FIX: Ensure ALL delta update fields are explicitly sent to the API
-            // The backend 'updateReviewForm' endpoint processes these delta arrays
-            if (updateData.objectiveReviews) cleanPayload.objectiveReviews = updateData.objectiveReviews;
-            if (updateData.keyResultReviews) cleanPayload.keyResultReviews = updateData.keyResultReviews;
-            if (updateData.competencyReviews) {
-                // Map competency names to IDs and ensure all field variants are present in the delta
-                cleanPayload.competencyReviews = updateData.competencyReviews.map((u: any) => {
-                    const mappedUpdate = { ...u };
-                    const uName = normalizeString(u.competencyName || u.name || "");
-
-                    // Look for the ID of the matched competency in the final object
-                    const matchedComp = finalReviewObj.competencies?.find((c: any) => {
-                        const n = normalizeString(c.competencyName || c.title || "");
-                        return n === uName || n.includes(uName) || uName.includes(n);
-                    });
-
-                    if (matchedComp && (matchedComp._id || matchedComp.id)) {
-                        mappedUpdate.id = matchedComp._id || matchedComp.id;
-                        mappedUpdate._id = matchedComp._id || matchedComp.id;
-                    }
-
-                    // Add rating variants to delta
-                    const rValue = u.employeeRating ?? u.managerRating ?? u.rating ?? u.Feedback ?? u.score ?? 0;
-                    if (rValue > 0) {
-                        mappedUpdate.Rating = rValue;
-                        mappedUpdate.rating = rValue;
-                        mappedUpdate.score = rValue;
-                        mappedUpdate.Feedback = rValue;
-                    }
-
-                    // Add comment variants to delta
-                    const cValue = u.employeeComments ?? u.managerComments ?? u.comment ?? u.Comments ?? u.Comment;
-                    if (cValue) {
-                        mappedUpdate.comment = cValue;
-                        mappedUpdate.Comments = cValue;
-                        mappedUpdate.Comment = cValue;
-                        mappedUpdate.comments = cValue;
-                    }
-
-                    return mappedUpdate;
+            // RESTORED CRITICAL FIX: Ensure all reviews include IDs and all rating/comment variants for DB persistence
+            if (updateData.objectiveReviews) {
+                cleanPayload.objectiveReviews = updateData.objectiveReviews.map((u: any) => {
+                    const mapped = { ...u };
+                    const uName = normalizeString(u.objectiveName || u.name || "");
+                    const matched = finalReviewObj.goals?.find((g: any) =>
+                        (g._id && String(g._id).toLowerCase() === String(u.id).toLowerCase()) ||
+                        normalizeString(g.objective || "") === uName
+                    );
+                    if (matched && (matched._id || matched.id)) mapped.id = matched._id || matched.id;
+                    const r = u.employeeRating ?? u.managerRating ?? u.rating ?? 0;
+                    if (r > 0) { mapped.Rating = r; mapped.rating = r; mapped.score = r; }
+                    const f = u.employeeFeedback ?? u.managerFeedback ?? u.feedback ?? u.comment ?? u.reason;
+                    if (f) { mapped.feedback = f; mapped.comment = f; mapped.reason = f; }
+                    return mapped;
                 });
             }
-            if (updateData.keyAccomplishments) cleanPayload.keyAccomplishments = updateData.keyAccomplishments;
-            if (updateData.cm1) cleanPayload.cm1 = updateData.cm1;
-            if (updateData.nextQuarterPlan) cleanPayload.nextQuarterPlan = updateData.nextQuarterPlan;
-            if (updateData.cm2) cleanPayload.cm2 = updateData.cm2;
-            if (updateData.managerOverallComments) cleanPayload.managerOverallComments = updateData.managerOverallComments;
-            if (updateData.cm3) cleanPayload.cm3 = updateData.cm3;
+            if (updateData.keyResultReviews) {
+                cleanPayload.keyResultReviews = updateData.keyResultReviews.map((u: any) => {
+                    const mapped = { ...u };
+                    const uName = normalizeString(u.keyResultName || u.name || "");
+                    let matchedKr: any = null;
+                    finalReviewObj.goals?.forEach((g: any) => {
+                        const found = g.children?.find((kr: any) =>
+                            (kr._id && String(kr._id).toLowerCase() === String(u.id).toLowerCase()) ||
+                            normalizeString(kr.keyResultName || "") === uName
+                        );
+                        if (found) matchedKr = found;
+                    });
+                    if (matchedKr && (matchedKr._id || matchedKr.id)) mapped.id = matchedKr._id || matchedKr.id;
+                    const r = u.employeeRating ?? u.managerRating ?? u.rating ?? 0;
+                    if (r > 0) { mapped.Rating = r; mapped.rating = r; mapped.score = r; }
+                    return mapped;
+                });
+            }
+            if (updateData.competencyReviews) {
+                cleanPayload.competencyReviews = updateData.competencyReviews.map((u: any) => {
+                    const mapped = { ...u };
+                    const uName = normalizeString(u.competencyName || u.name || "");
+
+                    // Determine role for matching
+                    const isManager = u.managerRating !== undefined || u.managerComments !== undefined || u.managerComment !== undefined;
+                    const roleType = isManager ? 'manager' : 'employee';
+
+                    // Robust match by name AND role type
+                    const matched = finalReviewObj.competencies?.find((c: any) => {
+                        const n = normalizeString(c.competencyName || c.title || "");
+                        const nameMatches = n === uName || n.includes(uName) || uName.includes(n) ||
+                            n.replace(/[\s-]/g, '') === uName.replace(/[\s-]/g, '');
+                        return nameMatches && (c.type === roleType);
+                    });
+
+                    if (matched && (matched._id || matched.id)) {
+                        mapped.id = matched._id || matched.id;
+                        mapped._id = matched._id || matched.id;
+                    }
+
+                    const r = u.employeeRating ?? u.managerRating ?? u.rating ?? u.Feedback ?? u.score ?? 0;
+                    if (r > 0) {
+                        mapped.Rating = r; mapped.rating = r; mapped.score = r; mapped.Feedback = r;
+                    }
+
+                    const c = u.employeeComments ?? u.managerComments ?? u.comment ?? u.Comments ?? u.Comment ?? u.reason;
+                    if (c) {
+                        const cText = String(c).trim();
+                        mapped.comment = cText;
+                        mapped.Comments = cText;
+                        mapped.Comment = cText;
+                        mapped.comments = cText;
+                        mapped.feedback_text = cText;
+                    }
+                    return mapped;
+                });
+            }
+            if (updateData.keyAccomplishments || updateData.cm1) {
+                const val = updateData.keyAccomplishments || updateData.cm1;
+                cleanPayload.keyAccomplishments = val; cleanPayload.cm1 = val;
+                if (!cleanPayload.overallComments) cleanPayload.overallComments = {};
+                cleanPayload.overallComments.cm1 = val;
+            }
+            if (updateData.nextQuarterPlan || updateData.cm2) {
+                const val = updateData.nextQuarterPlan || updateData.cm2;
+                cleanPayload.nextQuarterPlan = val; cleanPayload.cm2 = val;
+                if (!cleanPayload.overallComments) cleanPayload.overallComments = {};
+                cleanPayload.overallComments.cm2 = val;
+            }
+            if (updateData.managerOverallComments || updateData.cm3) {
+                const val = updateData.managerOverallComments || updateData.cm3;
+                cleanPayload.managerOverallComments = val; cleanPayload.cm3 = val;
+                if (!cleanPayload.overallComments) cleanPayload.overallComments = {};
+                cleanPayload.overallComments.cm3 = val;
+            }
 
             // Ensure calculated ratings are also at top level if not already
             cleanPayload.overallRating = finalReviewObj.overallRating;
@@ -734,9 +787,7 @@ export const submitReviewUpdate = async (updateData: any): Promise<boolean> => {
 
             console.log(`[SYNC] Sending update using ${isManagerAction ? 'Manager' : 'Employee'} API Key.`);
             console.log(`[SYNC] API Key Info: ${apiKey ? (apiKey.substring(0, 8) + '...' + apiKey.substring(apiKey.length - 8)) : 'MISSING'} (Length: ${apiKey?.length || 0})`);
-            console.log(`[SYNC] URL: ${url}`);
-            console.log(`%c[SYNC] PAYLOAD BEING SENT:`, "color: cyan; font-weight: bold;", JSON.stringify(cleanPayload, null, 2));
-
+            console.info(`[SYNC] Fetching: ${url}`);
             const response = await fetch(url, {
                 method: 'PUT',
                 headers: {
@@ -747,13 +798,13 @@ export const submitReviewUpdate = async (updateData: any): Promise<boolean> => {
             });
 
             if (response.ok) {
-                console.log("%c[SYNC] SUCCESS: Review synchronized with database.", "color: green; font-weight: bold;");
+                console.log("%c[SYNC] API SUCCESS - Record updated in DB.", "color: white; background: #4CAF50; padding: 2px 5px; border-radius: 3px; font-weight: bold;");
                 cachedReviewForm = { ...fullReviewData, data: finalReviewObj };
                 window.dispatchEvent(new CustomEvent('review-data-updated'));
                 return true;
             } else {
                 const errText = await response.text();
-                console.error(`[SYNC] FAILED with status ${response.status}:`, errText);
+                console.error(`%c[SYNC] API ERROR (${response.status}):`, "color: white; background: #F44336; padding: 2px 5px; border-radius: 3px;", errText);
             }
             return false;
         } catch (e) {
@@ -761,7 +812,10 @@ export const submitReviewUpdate = async (updateData: any): Promise<boolean> => {
             return false;
         }
     }));
-    return !!result;
+
+    // If caller needs to wait, they can await the promise, 
+    // but we return true immediately for Vapi to move on
+    return true;
 };
 
 // Keep existing exports for backward compatibility but route to new implementation
@@ -786,51 +840,54 @@ export const updateKeyResult = async (id: string, currentValue: string): Promise
     const updateUrlBase = import.meta.env.VITE_UPDATE_KEY_RESULT_API_URL || 'https://ai.talentspotifyapp.com/api/keyresults/updatekeyResult';
     const companyId = getCompanyId();
 
-    try {
-        let fullKeyResultObj: any = null;
-        let objectiveIndex = -1;
-        let krIndex = -1;
+    // Run the actual network update in the background
+    (async () => {
+        try {
+            let fullKeyResultObj: any = null;
+            let objectiveIndex = -1;
+            let krIndex = -1;
 
-        for (let i = 0; i < okrCache.length; i++) {
-            const objective = okrCache[i];
-            const children = objective.children || objective.keyResults || [];
-            const foundIndex = children.findIndex((kr: any) => String(kr.id || kr._id || kr.krID || "").trim() === String(id || "").trim());
-            if (foundIndex !== -1) {
-                fullKeyResultObj = { ...children[foundIndex] };
-                objectiveIndex = i;
-                krIndex = foundIndex;
-                break;
+            for (let i = 0; i < okrCache.length; i++) {
+                const objective = okrCache[i];
+                const children = objective.children || objective.keyResults || [];
+                const foundIndex = children.findIndex((kr: any) => String(kr.id || kr._id || kr.krID || "").trim() === String(id || "").trim());
+                if (foundIndex !== -1) {
+                    fullKeyResultObj = { ...children[foundIndex] };
+                    objectiveIndex = i;
+                    krIndex = foundIndex;
+                    break;
+                }
             }
-        }
 
-        if (fullKeyResultObj) {
-            fullKeyResultObj.actual = Number(currentValue); // Changed from parseInt to Number for decimal support
-            fullKeyResultObj.updatedAt = new Date().toISOString();
-        } else {
-            fullKeyResultObj = { actual: Number(currentValue) };
-        }
-
-        const url = `${updateUrlBase}/${id}?companyId=${companyId}`;
-        const response = await fetch(url, {
-            method: 'PUT',
-            headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify(fullKeyResultObj)
-        });
-
-        if (response.ok) {
-            console.log(`[OKR UPDATE] SUCCESS for ID: ${id}. Status: ${response.status}`);
-            if (objectiveIndex !== -1 && krIndex !== -1) {
-                okrCache[objectiveIndex].children[krIndex] = { ...okrCache[objectiveIndex].children[krIndex], ...fullKeyResultObj };
+            if (fullKeyResultObj) {
+                fullKeyResultObj.actual = Number(currentValue); // Supports decimal
+                fullKeyResultObj.updatedAt = new Date().toISOString();
+            } else {
+                fullKeyResultObj = { actual: Number(currentValue) };
             }
-            window.dispatchEvent(new CustomEvent('review-data-updated'));
-            return true;
-        } else {
-            const errText = await response.text();
-            console.error(`[OKR UPDATE] FAILED for ID: ${id}. Status: ${response.status}. Response: ${errText}`);
+
+            const url = `${updateUrlBase}/${id}?companyId=${companyId}`;
+            const response = await fetch(url, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify(fullKeyResultObj)
+            });
+
+            if (response.ok) {
+                console.log(`[OKR UPDATE] SYNC SUCCESS for ID: ${id}.`);
+                if (objectiveIndex !== -1 && krIndex !== -1) {
+                    okrCache[objectiveIndex].children[krIndex] = { ...okrCache[objectiveIndex].children[krIndex], ...fullKeyResultObj };
+                }
+                window.dispatchEvent(new CustomEvent('review-data-updated'));
+            } else {
+                const errText = await response.text();
+                console.error(`[OKR UPDATE] SYNC FAILED for ID: ${id}. Status: ${response.status}.`);
+            }
+        } catch (error) {
+            console.error('[OKR UPDATE] Sync Error:', error);
         }
-        return false;
-    } catch (error) {
-        console.error('[OKR UPDATE] Error:', error);
-        return false;
-    }
+    })();
+
+    // Return true immediately so UI/Vapi doesn't hang
+    return true;
 };
