@@ -35,6 +35,44 @@ export interface Competency {
     questions?: ReviewQuestion[];
 }
 
+// Utility for professionalizing spoken feedback
+/**
+ * Polishes spoken feedback by:
+ * 1. Trimming whitespace
+ * 2. Removing common spoken filler words/phrases from the start (filler-only or followed by space/comma)
+ * 3. Capitalizing the first letter
+ */
+const polishFeedback = (text: string | null | undefined): string => {
+    if (!text) return "";
+    let p = String(text).trim();
+    if (!p) return "";
+
+    // Remove common verbal fillers often caught in speech-to-text
+    const fillers = [
+        "actually", "definitely", "basically", "clearly", "honestly", "honestly speaking",
+        "to be honest", "i think", "i believe", "in my opinion", "from my side",
+        "i would say", "uhm", "umm", "well", "so", "like", "actually,", "basically,"
+    ];
+
+    let changed = true;
+    while (changed) {
+        changed = false;
+        const low = p.toLowerCase();
+        for (const f of fillers) {
+            // Match filler at start followed by space or comma, or if it's the only thing in the string
+            if (low === f || low.startsWith(f + " ") || low.startsWith(f + ",")) {
+                p = p.substring(f.length).trim().replace(/^[,\s]+/, "");
+                changed = true;
+                break;
+            }
+        }
+    }
+
+    if (!p) return "";
+    // Final Polish: Capitalize first character
+    return p.charAt(0).toUpperCase() + p.slice(1);
+};
+
 // Utility for string normalization
 const normalizeString = (s: string) => (s || "").toLowerCase().trim().replace(/&/g, 'and').replace(/\s+/g, ' ');
 
@@ -101,42 +139,44 @@ export const fetchEmployeeOKRs = async (): Promise<OKR[]> => {
     }
 };
 
-export const fetchReviewForm = async (): Promise<any> => {
+// Fetch the EMPLOYEE review form (using employee URL)
+export const fetchEmployeeReviewForm = async (): Promise<any> => {
     const apiKey = import.meta.env.VITE_EMPLOYEE_API_KEY;
     const apiUrl = import.meta.env.VITE_REVIEW_FORM_API_URL;
-
-    if (!apiKey || !apiUrl) {
-        console.warn('Review API key or URL is missing.');
-        return null;
-    }
-
+    if (!apiKey || !apiUrl) { console.warn('Employee Review API key or URL is missing.'); return null; }
     try {
-        console.log('Fetching Review Form from:', apiUrl);
-        // Force fetching the Manager view to ensure we see the latest Manager draft comments/ratings
-        // This resolves the issue where Manager updates are hidden in the Employee view until sign-off
-        const managerUrl = apiUrl.replace('/Employee', '/Manager');
-        console.log('Switched to Manager View URL:', managerUrl);
-
-        const response = await fetch(`${managerUrl}${managerUrl.includes('?') ? '&' : '?'}t=${Date.now()}`, {
+        // Use Employee URL directly (no switch to manager)
+        const employeeUrl = apiUrl; // already contains /Employee or similar
+        const response = await fetch(`${employeeUrl}${employeeUrl.includes('?') ? '&' : '?'}t=${Date.now()}`, {
             method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'Content-Type': 'application/json'
-            }
+            headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' }
         });
-
-        if (!response.ok) {
-            throw new Error(`Failed to fetch Review Form: ${response.statusText}`);
-        }
-
+        if (!response.ok) throw new Error(`Failed to fetch Employee Review Form: ${response.statusText}`);
         const data = await response.json();
-        console.log('Fetched Review Form Data:', JSON.stringify(data, null, 2));
+        console.log('%c[FETCH] Employee Review Form fetched', 'color: green; font-weight: bold;', data);
         return data;
-    } catch (error) {
-        console.error('Error fetching Review Form:', error);
-        return null;
-    }
+    } catch (error) { console.error('Error fetching Employee Review Form:', error); return null; }
 };
+
+// Fetch the MANAGER review form (using manager URL)
+export const fetchManagerReviewForm = async (): Promise<any> => {
+    const apiKey = import.meta.env.VITE_EMPLOYEE_API_KEY;
+    const managerApiUrl = import.meta.env.VITE_MANAGER_REVIEW_FORM_API_URL;
+    if (!apiKey || !managerApiUrl) { console.warn('Manager Review API key or URL is missing.'); return null; }
+    try {
+        const response = await fetch(`${managerApiUrl}${managerApiUrl.includes('?') ? '&' : '?'}t=${Date.now()}`, {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' }
+        });
+        if (!response.ok) throw new Error(`Failed to fetch Manager Review Form: ${response.statusText}`);
+        const data = await response.json();
+        console.log('%c[FETCH] Manager Review Form fetched', 'color: blue; font-weight: bold;', data);
+        return data;
+    } catch (error) { console.error('Error fetching Manager Review Form:', error); return null; }
+};
+
+// Keep the old fetchReviewForm for backward compat (fetches manager view)
+export const fetchReviewForm = async (): Promise<any> => fetchManagerReviewForm();
 
 const getCompanyId = () => {
     return (new URLSearchParams(window.location.search).get('companyId')) || '6396f7d703546500086f0200';
@@ -144,26 +184,46 @@ const getCompanyId = () => {
 
 // Mutex to prevent race conditions during concurrent updates
 let updateMutex: Promise<any> = Promise.resolve();
+
+// Separate caches for employee and manager review forms
+let cachedEmployeeReviewForm: any = null;
+let lastEmployeeReviewFetchTime = 0;
+let cachedManagerReviewForm: any = null;
+let lastManagerReviewFetchTime = 0;
+
+// Legacy alias used by other parts of the app (returns manager view for display)
 let cachedReviewForm: any = null;
 let lastReviewFetchTime = 0;
 
 export const getFreshReviewForm = async (force: boolean = false) => {
     const now = Date.now();
-    if (!force && cachedReviewForm && (now - lastReviewFetchTime < 30000)) {
-        return cachedReviewForm;
-    }
-    const fresh = await fetchReviewForm();
-    if (fresh) {
-        cachedReviewForm = fresh;
-        lastReviewFetchTime = now;
-    }
+    if (!force && cachedReviewForm && (now - lastReviewFetchTime < 3000)) return cachedReviewForm;
+    const fresh = await fetchManagerReviewForm();
+    if (fresh) { cachedReviewForm = fresh; cachedManagerReviewForm = fresh; lastReviewFetchTime = now; lastManagerReviewFetchTime = now; }
     return cachedReviewForm;
 };
 
+export const getFreshEmployeeReviewForm = async (force: boolean = false) => {
+    const now = Date.now();
+    if (!force && cachedEmployeeReviewForm && (now - lastEmployeeReviewFetchTime < 3000)) return cachedEmployeeReviewForm;
+    const fresh = await fetchEmployeeReviewForm();
+    if (fresh) { cachedEmployeeReviewForm = fresh; lastEmployeeReviewFetchTime = now; }
+    return cachedEmployeeReviewForm;
+};
+
+export const getFreshManagerReviewForm = async (force: boolean = false) => {
+    const now = Date.now();
+    if (!force && cachedManagerReviewForm && (now - lastManagerReviewFetchTime < 3000)) return cachedManagerReviewForm;
+    const fresh = await fetchManagerReviewForm();
+    if (fresh) { cachedManagerReviewForm = fresh; cachedReviewForm = fresh; lastManagerReviewFetchTime = now; lastReviewFetchTime = now; }
+    return cachedManagerReviewForm;
+};
+
 export const clearReviewCache = () => {
-    console.log("%c[CACHE] Clearing Review Form Cache...", "color: gray;");
-    cachedReviewForm = null;
-    lastReviewFetchTime = 0;
+    console.log("%c[CACHE] Clearing all Review Form Caches...", "color: gray;");
+    cachedReviewForm = null; lastReviewFetchTime = 0;
+    cachedEmployeeReviewForm = null; lastEmployeeReviewFetchTime = 0;
+    cachedManagerReviewForm = null; lastManagerReviewFetchTime = 0;
 };
 
 /**
@@ -265,20 +325,59 @@ const applyUpdateToReviewObject = (reviewObj: any, reviewData: any) => {
                 }
             }
 
-            const objUpdate = objectiveUpdates.find((u: any) =>
-                (u.id && String(u.id).trim() === String(goal._id || goal.id || "").trim()) ||
-                (u.objectiveName && normalizeString(u.objectiveName) === normalizeString(goal.objective))
-            );
+            const objReview = objectiveUpdates.find((u: any) => {
+                const matchObj = () => {
+                    const n = normalizeString(goal.objective || "");
+                    const target = normalizeString(u.objectiveName || u.name || "");
+                    if (!target) return false;
+                    if (n === target) return true;
+                    if (n.includes(target) || target.includes(n)) return true;
+                    if (n.replace(/objective:?\s*/i, '').trim() === target.replace(/objective:?\s*/i, '').trim()) return true;
+                    return false;
+                };
+                return (u.id && String(u.id).trim() === String(goal._id || goal.id || "").trim()) || matchObj();
+            });
 
-            if (objUpdate) {
-                if (objUpdate.employeeRating !== undefined) {
-                    const r = Number(objUpdate.employeeRating);
-                    updatedGoal.employeeRating = !isNaN(r) ? Math.round(Math.max(0, Math.min(5, r))) : 0;
+            if (objReview) {
+                if (objReview.employeeRating !== undefined || (objReview.role === 'employee' && objReview.rating !== undefined)) {
+                    const r = Number(objReview.employeeRating ?? objReview.rating);
+                    const val = !isNaN(r) ? Math.round(Math.max(1, Math.min(5, r))) : 0;
+                    if (val > 0) {
+                        updatedGoal.employeeRating = val;
+                        updatedGoal.employee_rating = val;
+                        updatedGoal.rating = val;
+                        updatedGoal.Rating = val;
+                        updatedGoal.score = val;
+                    }
                 }
-                if (objUpdate.managerRating !== undefined) {
-                    const r = Number(objUpdate.managerRating);
-                    updatedGoal.managerRating = !isNaN(r) ? Math.round(Math.max(0, Math.min(5, r))) : 0;
+                if (objReview.managerRating !== undefined || (objReview.role === 'manager' && objReview.rating !== undefined)) {
+                    const r = Number(objReview.managerRating ?? objReview.rating);
+                    const val = !isNaN(r) ? Math.round(Math.max(1, Math.min(5, r))) : 0;
+                    if (val > 0) {
+                        updatedGoal.managerRating = val;
+                        updatedGoal.manager_rating = val;
+                        updatedGoal.rating = val;
+                        updatedGoal.Rating = val;
+                        updatedGoal.score = val;
+                        updatedGoal.Feedback = val;
+                        updatedGoal.feedback = val;
+                    }
                 }
+                const feedback = objReview.managerFeedback || objReview.employeeFeedback || objReview.feedback || objReview.comment || objReview.reason;
+                if (feedback) {
+                    const txt = String(feedback).trim();
+                    updatedGoal.feedback = txt;
+                    updatedGoal.comment = txt;
+                    updatedGoal.reason = txt;
+                    if (objReview.managerRating !== undefined || objReview.role === 'manager') {
+                        updatedGoal.managerFeedback = txt;
+                        updatedGoal.manager_feedback = txt;
+                    } else {
+                        updatedGoal.employeeFeedback = txt;
+                        updatedGoal.employee_feedback = txt;
+                    }
+                }
+                console.log(`[DEBUG] Matched and updated Objective: ${goal.objective}`);
             }
 
             if (Array.isArray(updatedGoal.children)) {
@@ -325,27 +424,16 @@ const applyUpdateToReviewObject = (reviewObj: any, reviewData: any) => {
             const uName = normalizeString(update.competencyName || update.name || "");
             if (!uName) return;
 
-            console.log(`[DEBUG] Trying to match competency: '${uName}'`);
+            console.log(`[DEBUG] Trying to match competency: '${uName}' for role: ${update.role || 'unspecified'}`);
 
             const matchComp = (cName: string) => {
                 const n = normalizeString(cName || "");
-
-                // Exact match
                 if (n === uName) return true;
-
-                // Contains match (either direction)
                 if (n.includes(uName) || uName.includes(n)) return true;
-
-                // Remove spaces and hyphens
                 if (n.replace(/[\s-]/g, '') === uName.replace(/[\s-]/g, '')) return true;
-
-                // Remove 'skills' suffix
                 if (n.replace(/skills?$/i, '').trim() === uName.replace(/skills?$/i, '').trim()) return true;
-
-                // Split by '&' and check if any part matches (for "Ownership & Accountability")
                 const nParts = n.split(/[&,]/).map(p => p.trim());
                 const uParts = uName.split(/[&,]/).map(p => p.trim());
-
                 for (const nPart of nParts) {
                     for (const uPart of uParts) {
                         if (nPart && uPart && (nPart.includes(uPart) || uPart.includes(nPart))) {
@@ -353,68 +441,82 @@ const applyUpdateToReviewObject = (reviewObj: any, reviewData: any) => {
                         }
                     }
                 }
-
                 return false;
             };
-            const empIdx = updatedCompetencies.findIndex(c => c.type === 'employee' && matchComp(c.competencyName || c.title));
-            console.log(`[DEBUG] Employee Search Result for '${uName}': Index ${empIdx}`);
 
-            if (empIdx !== -1) {
-                const r = Number(update.employeeRating);
-                if (update.employeeRating !== undefined && !isNaN(r)) {
-                    const empRating = Math.round(Math.max(0, Math.min(5, r)));
-                    // Write to all possible field name variants for DB compatibility
-                    updatedCompetencies[empIdx].Feedback = empRating;
-                    updatedCompetencies[empIdx].feedback = empRating;
-                    updatedCompetencies[empIdx].rating = empRating;
-                    updatedCompetencies[empIdx].Rating = empRating;
-                    updatedCompetencies[empIdx].score = empRating;
-                }
-                const empCmt = update.employeeComment || update.employeeComments || update.employeeReason || update.selfComment || update.reason || update.comment || update.Comments || update.Comment;
-                if (empCmt) {
-                    const cmt = String(empCmt).trim();
-                    updatedCompetencies[empIdx].Comments = cmt;
-                    updatedCompetencies[empIdx].comments = cmt;
-                    updatedCompetencies[empIdx].Comment = cmt;
-                    updatedCompetencies[empIdx].comment = cmt;
-                    updatedCompetencies[empIdx].feedback_text = cmt;
-                }
-            }
-            const mgrIdx = updatedCompetencies.findIndex(c => c.type === 'manager' && matchComp(c.competencyName || c.title));
-            console.log(`[DEBUG] Manager Search Result for '${uName}': Index ${mgrIdx}`);
+            // STRICT ROLE CHECKING: Only update the record matching the specified role
+            const updateRole = update.role;
 
-            if (mgrIdx !== -1) {
-                const r = Number(update.managerRating);
-                if (update.managerRating !== undefined && !isNaN(r)) {
-                    const mgrRating = Math.round(Math.max(0, Math.min(5, r)));
-                    // Write to all possible field name variants for DB compatibility
-                    updatedCompetencies[mgrIdx].Feedback = mgrRating;
-                    updatedCompetencies[mgrIdx].feedback = mgrRating;
-                    updatedCompetencies[mgrIdx].rating = mgrRating;
-                    updatedCompetencies[mgrIdx].Rating = mgrRating;
-                    updatedCompetencies[mgrIdx].score = mgrRating;
-                }
-                const mgrCmt = update.managerComment || update.managerComments || update.managerReason || update.supervisorComment || update.reason || update.comment || update.Comments || update.Comment;
-                if (mgrCmt) {
-                    const cmt = String(mgrCmt).trim();
-                    updatedCompetencies[mgrIdx].Comments = cmt;
-                    updatedCompetencies[mgrIdx].comments = cmt;
-                    updatedCompetencies[mgrIdx].Comment = cmt;
-                    updatedCompetencies[mgrIdx].comment = cmt;
-                    updatedCompetencies[mgrIdx].feedback_text = cmt;
+            if (updateRole === 'employee' || !updateRole) {
+                const empIdx = updatedCompetencies.findIndex(c => c.type === 'employee' && matchComp(c.competencyName || c.title));
+                if (empIdx !== -1) {
+                    const r = Number(update.employeeRating !== undefined ? update.employeeRating : update.rating);
+                    if ((update.employeeRating !== undefined || update.rating !== undefined) && !isNaN(r)) {
+                        const empRating = Math.round(Math.max(0, Math.min(5, r)));
+                        updatedCompetencies[empIdx].Feedback = empRating;
+                        updatedCompetencies[empIdx].feedback = empRating;
+                        updatedCompetencies[empIdx].rating = empRating;
+                        updatedCompetencies[empIdx].Rating = empRating;
+                        updatedCompetencies[empIdx].score = empRating;
+                    }
+                    const empCmt = update.employeeComment || update.employeeComments || update.employeeReason || update.selfComment || update.reason || update.comment || update.Comments || update.Comment;
+                    if (empCmt) {
+                        const cmt = polishFeedback(empCmt);
+                        updatedCompetencies[empIdx].Comments = cmt;
+                        updatedCompetencies[empIdx].comments = cmt;
+                        updatedCompetencies[empIdx].Comment = cmt;
+                        updatedCompetencies[empIdx].comment = cmt;
+                        updatedCompetencies[empIdx].feedback_text = cmt;
+                        updatedCompetencies[empIdx].reason = cmt;
+                    }
+                    console.log(`[DEBUG] Updated Employee record for '${uName}'`);
                 }
             }
 
-            // Log if no match was found
-            if (empIdx === -1 && mgrIdx === -1) {
-                console.warn(`[DEBUG] NO MATCH FOUND for competency: '${uName}'. Available competencies:`,
-                    updatedCompetencies.map(c => `${c.type}: ${c.competencyName || c.title}`));
+            if (updateRole === 'manager' || !updateRole) {
+                // First try strict type match, then fall back to name-only match
+                // (manager review form may not have 'type' set on every competency)
+                let mgrIdx = updatedCompetencies.findIndex(c => {
+                    const type = (c.type || "").toLowerCase();
+                    return (type === 'manager' || type === 'supervisor') && matchComp(c.competencyName || c.title);
+                });
+                if (mgrIdx === -1) {
+                    // Fallback: match by name only — update the first matching competency not already matched by employee
+                    const empMatchIdx = updatedCompetencies.findIndex(c => c.type === 'employee' && matchComp(c.competencyName || c.title));
+                    mgrIdx = updatedCompetencies.findIndex((c, idx) => idx !== empMatchIdx && matchComp(c.competencyName || c.title));
+                    if (mgrIdx !== -1) console.warn(`[DEBUG] Manager competency '${uName}' matched by fallback (no type field). idx=${mgrIdx}`);
+                }
+                if (mgrIdx !== -1) {
+                    const r = Number(update.managerRating !== undefined ? update.managerRating : (update.rating !== undefined ? update.rating : 0));
+                    if ((update.managerRating !== undefined || update.rating !== undefined) && !isNaN(r) && r > 0) {
+                        const mgrRating = Math.round(Math.max(1, Math.min(5, r)));
+                        updatedCompetencies[mgrIdx].Feedback = mgrRating;
+                        updatedCompetencies[mgrIdx].feedback = mgrRating;
+                        updatedCompetencies[mgrIdx].rating = mgrRating;
+                        updatedCompetencies[mgrIdx].Rating = mgrRating;
+                        updatedCompetencies[mgrIdx].score = mgrRating;
+                        updatedCompetencies[mgrIdx].managerRating = mgrRating;
+                        updatedCompetencies[mgrIdx].manager_rating = mgrRating;
+                    }
+                    const mgrCmt = update.managerComment || update.managerComments || update.comment || update.managerReason || update.supervisorComment || update.reason || update.Comments || update.Comment;
+                    if (mgrCmt) {
+                        const cmt = polishFeedback(mgrCmt);
+                        updatedCompetencies[mgrIdx].Comments = cmt;
+                        updatedCompetencies[mgrIdx].comments = cmt;
+                        updatedCompetencies[mgrIdx].Comment = cmt;
+                        updatedCompetencies[mgrIdx].comment = cmt;
+                        updatedCompetencies[mgrIdx].feedback_text = cmt;
+                        updatedCompetencies[mgrIdx].managerComments = cmt;
+                        updatedCompetencies[mgrIdx].manager_comments = cmt;
+                        updatedCompetencies[mgrIdx].managerFeedback = cmt;
+                        updatedCompetencies[mgrIdx].reason = cmt;
+                    }
+                    console.log(`[DEBUG] Updated Manager record for '${uName}' at index ${mgrIdx}`);
+                }
             }
         });
         finalReviewObj.competencies = updatedCompetencies;
-
-        // CRITICAL: Force immediate UI update for competencies
-        console.log("%c[COMPETENCY] Competencies updated, forcing UI refresh...", "color: magenta; font-weight: bold;");
+        console.log("%c[OPTIMISTIC] Competencies merged and polished successfully.", "color: magenta;");
     }
 
     // Recalculate Stats using the SAME formula as Report.tsx:
@@ -570,25 +672,56 @@ const optimisticUpdateCache = (reviewData: any) => {
  */
 export const submitReviewUpdate = async (updateData: any): Promise<boolean> => {
     console.log("[DEBUG] submitReviewUpdate called with:", JSON.stringify(updateData, null, 2));
-    // Optimistic Update: Update cache and trigger UI immediately
-    optimisticUpdateCache(updateData);
 
-    console.log(`[SYNC] Update added to background queue... Queueing update for:`, Object.keys(updateData));
-    const syncPromise = (updateMutex = updateMutex.then(async () => {
+    // Determine role upfront (used for deciding which review form to fetch/update)
+    const isManagerAction =
+        (updateData.role === 'manager') ||
+        (updateData.competencyReviews?.some((u: any) => u.role === 'manager' || u.managerRating !== undefined || u.managerComments !== undefined)) ||
+        (updateData.objectiveReviews?.some((u: any) => u.role === 'manager' || u.managerRating !== undefined || u.managerFeedback !== undefined)) ||
+        (updateData.managerRating !== undefined) ||
+        (updateData.manager_rating !== undefined) ||
+        (updateData.managerComments !== undefined) ||
+        (updateData.manager_comments !== undefined) ||
+        (updateData.cm3 !== undefined) ||
+        (updateData.managerOverallComments !== undefined);
+
+    console.log(`%c[SYNC] Role detected: ${isManagerAction ? 'MANAGER' : 'EMPLOYEE'}`, 'color: white; background: ' + (isManagerAction ? '#9C27B0' : '#4CAF50') + '; padding: 2px 5px; border-radius: 3px;');
+
+    // Optimistic Update: Update cache and trigger UI immediately for responsiveness
+    // Force a fetch if cache is empty to ensure the very first update is also optimistic
+    if (!cachedReviewForm || !cachedReviewForm.data) {
+        console.log("[SYNC] Cache empty at update start. Fetching for optimistic update...");
+        if (isManagerAction) getFreshManagerReviewForm(false).then(() => optimisticUpdateCache(updateData));
+        else getFreshEmployeeReviewForm(false).then(() => optimisticUpdateCache(updateData));
+    } else {
+        optimisticUpdateCache(updateData);
+    }
+
+    console.log(`[SYNC] Executing database update for:`, Object.keys(updateData));
+
+    // We use a mutex to ensure sequential updates and avoid race conditions on the backend.
+    updateMutex = updateMutex.then(async () => {
         try {
-            console.log("%c[SUBMISSION] Sync Task Started - Hitting Network...", "color: white; background: #2196F3; padding: 2px 5px; border-radius: 3px;");
+            console.log("%c[SUBMISSION] Database Sync Started...", "color: white; background: #2196F3; padding: 2px 5px; border-radius: 3px;");
 
-            // 1. Ensure OKR cache is warm (for initialization if needed)
             if (okrCache.length === 0) await fetchEmployeeOKRs();
 
-            // 2. Get review form data - Use cache if available and not too old
-            const fullReviewData = await getFreshReviewForm();
+            // CRITICAL FIX: Fetch the CORRECT review form based on the role
+            // Manager updates must go to the manager review form; employee updates to the employee review form
+            let fullReviewData: any = null;
+            if (isManagerAction) {
+                fullReviewData = await getFreshManagerReviewForm(true);
+                console.log('%c[SUBMISSION] Using MANAGER review form', 'color: purple; font-weight: bold;');
+            } else {
+                fullReviewData = await getFreshEmployeeReviewForm(true);
+                console.log('%c[SUBMISSION] Using EMPLOYEE review form', 'color: green; font-weight: bold;');
+            }
+
             if (!fullReviewData || !fullReviewData.data) {
                 console.error("[SUBMISSION] Failed to get fresh review form");
                 return false;
             }
 
-            // 3. Prepare data array
             let reviewDataArray = Array.isArray(fullReviewData.data) ? fullReviewData.data :
                 (fullReviewData.data?.review ? [fullReviewData.data.review] :
                     (fullReviewData.data?.data ? (Array.isArray(fullReviewData.data.data) ? fullReviewData.data.data : [fullReviewData.data.data]) :
@@ -596,7 +729,6 @@ export const submitReviewUpdate = async (updateData: any): Promise<boolean> => {
 
             reviewDataArray = reviewDataArray.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-            // 4. Resolve the targeted review object from cache or fresh data
             const providedId = (updateData.id || updateData._id || "").trim();
             let reviewObj = reviewDataArray.find((r: any) =>
                 providedId && (String(r._id).toLowerCase() === providedId.toLowerCase() || String(r.id).toLowerCase() === providedId.toLowerCase())
@@ -607,18 +739,30 @@ export const submitReviewUpdate = async (updateData: any): Promise<boolean> => {
                 reviewObj = reviewDataArray.find((r: any) => sessionEmpName && normalizeString(r.employeeFullName).includes(normalizeString(sessionEmpName)));
             }
 
-            // If still not found, try one last fetch with force to ensure we didn't miss a new review
-            if (!reviewObj && !providedId) {
-                console.log("[SYNC] Review not found in cache, forcing fresh fetch...");
-                const freshData = await getFreshReviewForm(true);
-                if (freshData && freshData.data) {
-                    const freshArray = Array.isArray(freshData.data) ? freshData.data : [freshData.data];
-                    reviewObj = freshArray[0];
-                }
+            if (!reviewObj) {
+                // Use known employee/manager ID as fallback
+                const fallbackId = isManagerAction ? '68e49939df33a7c9177aaf03' : '68e240b0d9876d59139672d6';
+                reviewObj = reviewDataArray.find((r: any) => r.employeeId === fallbackId) || reviewDataArray[0];
+                console.log(`[SUBMISSION] Using fallback: employeeId=${fallbackId}, found:`, reviewObj?._id);
             }
 
-            if (!reviewObj) {
-                reviewObj = reviewDataArray.find((r: any) => r.employeeId === '68e240b0d9876d59139672d6') || reviewDataArray[0];
+            // CRITICAL FIX FOR MANAGER: For manager actions, ensure we are using the review object 
+            // that matches the dedicated manager update URL if provided.
+            if (isManagerAction) {
+                const mgrUpdateUrl = import.meta.env.VITE_MANAGER_REVIEW_UPDATE_URL;
+                if (mgrUpdateUrl) {
+                    const match = mgrUpdateUrl.match(/\/updateReviewForm\/([a-f\d]{24}|[a-f\d]{12})/i);
+                    if (match && match[1]) {
+                        const forcedId = match[1];
+                        const foundInArray = reviewDataArray.find((r: any) => String(r._id) === forcedId || String(r.id) === forcedId);
+                        if (foundInArray) {
+                            reviewObj = foundInArray;
+                            console.log(`%c[MANAGER] Forced matched reviewObj from URL ID: ${forcedId}`, "color: purple; font-weight: bold;");
+                        } else {
+                            console.warn(`[MANAGER] Could not find review document ${forcedId} in manager's fetched list. Using best match instead.`);
+                        }
+                    }
+                }
             }
 
             if (!reviewObj) {
@@ -626,21 +770,11 @@ export const submitReviewUpdate = async (updateData: any): Promise<boolean> => {
                 return false;
             }
 
-            console.log(`[SYNC] Updating review ${reviewObj._id} for ${reviewObj.employeeFullName}`);
-
-            // 4. Apply updates locally to create the final payload
             const finalReviewObj = applyUpdateToReviewObject(reviewObj, updateData);
-
-            // Force manager name consistency for Madhavi Peddireddy as per Report.tsx
             const isMadhavi = String(import.meta.env.VITE_MANAGER_REVIEW_FORM_API_URL || "").includes("68e49939df33a7c9177aaf03");
-            if (isMadhavi) {
-                finalReviewObj.managerName = "Madhavi peddireddy";
-            }
+            if (isMadhavi) finalReviewObj.managerName = "Madhavi peddireddy";
 
             const cleanPayload = JSON.parse(JSON.stringify(finalReviewObj));
-
-            // CRITICAL: Ensure Overall Rating is at the TOP LEVEL of the update payload
-            // We use multiple variants to ensure the backend captures it
             const finalScore = finalReviewObj.overallRating;
             cleanPayload.overallRating = finalScore;
             cleanPayload.overalRating = finalScore;
@@ -655,23 +789,53 @@ export const submitReviewUpdate = async (updateData: any): Promise<boolean> => {
             cleanPayload.totalAchievement = finalReviewObj.totalAchievement;
             cleanPayload.total_achievement = finalReviewObj.totalAchievement;
 
-            console.log(`%c[SYNC] Final Overall Rating to DB: ${finalScore}`, "color: white; background: green; padding: 2px 5px; border-radius: 3px; font-weight: bold;");
-            console.log(`%c[SYNC] Payload Summary: OKR Combined=${finalReviewObj.okrCombined}, Comp Combined=${finalReviewObj.compCombined}, Total Ach=${finalReviewObj.totalAchievement}%`, "color: green;");
-
-            // RESTORED CRITICAL FIX: Ensure all reviews include IDs and all rating/comment variants for DB persistence
+            // Ensure all reviews include IDs and all rating/comment variants for DB persistence
             if (updateData.objectiveReviews) {
                 cleanPayload.objectiveReviews = updateData.objectiveReviews.map((u: any) => {
                     const mapped = { ...u };
                     const uName = normalizeString(u.objectiveName || u.name || "");
+                    const role = u.role || (isManagerAction ? 'manager' : 'employee');
+                    const isManager = (role === 'manager');
+
                     const matched = finalReviewObj.goals?.find((g: any) =>
                         (g._id && String(g._id).toLowerCase() === String(u.id).toLowerCase()) ||
                         normalizeString(g.objective || "") === uName
                     );
                     if (matched && (matched._id || matched.id)) mapped.id = matched._id || matched.id;
-                    const r = u.employeeRating ?? u.managerRating ?? u.rating ?? 0;
-                    if (r > 0) { mapped.Rating = r; mapped.rating = r; mapped.score = r; }
-                    const f = u.employeeFeedback ?? u.managerFeedback ?? u.feedback ?? u.comment ?? u.reason;
-                    if (f) { mapped.feedback = f; mapped.comment = f; mapped.reason = f; }
+
+                    const r = u.managerRating ?? u.employeeRating ?? u.rating ?? 0;
+                    if (r > 0) {
+                        mapped.Rating = r; mapped.rating = r; mapped.score = r;
+                        mapped.Feedback = r; mapped.feedback = r;
+                        // Strictly set the fields the Report.tsx and backend expect
+                        if (isManager) {
+                            mapped.managerRating = r;
+                            mapped.manager_rating = r;
+                        } else {
+                            mapped.employeeRating = r;
+                            mapped.employee_rating = r;
+                        }
+                    }
+
+                    const f = u.managerComments ?? u.employeeComments ?? u.feedback ?? u.comment ?? u.reason ?? u.managerFeedback ?? u.employeeFeedback;
+                    if (f) {
+                        const cmt = polishFeedback(f);
+                        mapped.feedback = cmt; mapped.comment = cmt; mapped.reason = cmt;
+                        mapped.Comments = cmt; mapped.comments = cmt;
+                        mapped.Comment = cmt; mapped.feedback_text = cmt;
+
+                        if (isManager) {
+                            mapped.managerComments = cmt;
+                            mapped.manager_comments = cmt;
+                            mapped.managerFeedback = cmt;
+                            mapped.managerComment = cmt;
+                        } else {
+                            mapped.employeeComments = cmt;
+                            mapped.employee_comments = cmt;
+                            mapped.employeeFeedback = cmt;
+                            mapped.employeeComment = cmt;
+                        }
+                    }
                     return mapped;
                 });
             }
@@ -697,97 +861,185 @@ export const submitReviewUpdate = async (updateData: any): Promise<boolean> => {
                 cleanPayload.competencyReviews = updateData.competencyReviews.map((u: any) => {
                     const mapped = { ...u };
                     const uName = normalizeString(u.competencyName || u.name || "");
+                    const role = u.role || (u.managerRating !== undefined || u.managerComments !== undefined ? 'manager' : 'employee');
+                    const isManager = (role === 'manager');
 
-                    // Determine role for matching
-                    const isManager = u.managerRating !== undefined || u.managerComments !== undefined || u.managerComment !== undefined;
-                    const roleType = isManager ? 'manager' : 'employee';
-
-                    // Robust match by name AND role type
                     const matched = finalReviewObj.competencies?.find((c: any) => {
                         const n = normalizeString(c.competencyName || c.title || "");
-                        const nameMatches = n === uName || n.includes(uName) || uName.includes(n) ||
-                            n.replace(/[\s-]/g, '') === uName.replace(/[\s-]/g, '');
-                        return nameMatches && (c.type === roleType);
+                        const cType = String(c.type || '').toLowerCase();
+                        const targetType = isManager ? 'manager' : 'employee';
+                        return (n === uName || n.includes(uName)) &&
+                            (cType === targetType || (!cType && !isManager));
                     });
 
-                    if (matched && (matched._id || matched.id)) {
-                        mapped.id = matched._id || matched.id;
-                        mapped._id = matched._id || matched.id;
-                    }
+                    if (matched && (matched._id || matched.id)) mapped.id = matched._id || matched.id;
 
-                    const r = u.employeeRating ?? u.managerRating ?? u.rating ?? u.Feedback ?? u.score ?? 0;
+                    const r = u.managerRating ?? u.employeeRating ?? u.rating ?? 0;
                     if (r > 0) {
-                        mapped.Rating = r; mapped.rating = r; mapped.score = r; mapped.Feedback = r;
+                        mapped.Rating = r; mapped.rating = r; mapped.score = r;
+                        if (isManager) mapped.managerRating = r; else mapped.employeeRating = r;
                     }
 
-                    const c = u.employeeComments ?? u.managerComments ?? u.comment ?? u.Comments ?? u.Comment ?? u.reason;
+                    const c = u.managerComments ?? u.employeeComments ?? u.comment ?? u.reason ?? u.Comments ?? u.Comment;
                     if (c) {
-                        const cText = String(c).trim();
-                        mapped.comment = cText;
-                        mapped.Comments = cText;
-                        mapped.Comment = cText;
-                        mapped.comments = cText;
-                        mapped.feedback_text = cText;
+                        const text = polishFeedback(c);
+                        mapped.comment = text;
+                        mapped.Comments = text;
+                        mapped.Comment = text;
+                        mapped.feedback_text = text;
+                        mapped.reason = text;
+                        if (isManager) {
+                            mapped.managerComments = text;
+                            mapped.managerComment = text;
+                            mapped.managerFeedback = text;
+                        } else {
+                            mapped.employeeComments = text;
+                            mapped.employeeComment = text;
+                            mapped.employeeFeedback = text;
+                        }
                     }
+
+                    // Ensure role is explicitly present for backend routing
+                    if (!mapped.role) mapped.role = role;
+
                     return mapped;
                 });
             }
+            // SAFETY NET for Manager OKR updates:
+            // Directly inject rating/comment into cleanPayload.goals by name match.
+            if (isManagerAction && updateData.objectiveReviews && Array.isArray(cleanPayload.goals)) {
+                updateData.objectiveReviews.forEach((u: any) => {
+                    const uName = normalizeString(u.objectiveName || u.name || "");
+                    if (!uName) return;
+                    const rating = Number(u.managerRating ?? u.rating ?? 0);
+                    const feedback = u.managerFeedback ?? u.feedback ?? u.comment ?? u.reason ?? "";
+
+                    let idx = cleanPayload.goals.findIndex((g: any) =>
+                        normalizeString(g.objective || g.title || "").includes(uName) ||
+                        uName.includes(normalizeString(g.objective || g.title || ""))
+                    );
+                    if (idx !== -1) {
+                        if (rating > 0) {
+                            cleanPayload.goals[idx].managerRating = rating;
+                            cleanPayload.goals[idx].manager_rating = rating;
+                            cleanPayload.goals[idx].rating = rating;
+                            cleanPayload.goals[idx].Rating = rating;
+                            cleanPayload.goals[idx].score = rating;
+                            cleanPayload.goals[idx].Feedback = rating;
+                            cleanPayload.goals[idx].feedback = rating;
+                            console.log(`%c[SAFETY-OKR] ${uName} rating=${rating} injected.`, 'color: cyan;');
+                        }
+                        if (feedback) {
+                            const txt = polishFeedback(feedback);
+                            cleanPayload.goals[idx].managerFeedback = txt;
+                            cleanPayload.goals[idx].manager_feedback = txt;
+                            cleanPayload.goals[idx].feedback = txt;
+                            cleanPayload.goals[idx].comment = txt;
+                            cleanPayload.goals[idx].reason = txt;
+                            console.log(`%c[SAFETY-OKR] ${uName} feedback polished and injected.`, 'color: cyan;');
+                        }
+                    }
+                });
+            }
+
+            // SAFETY NET for competency updates (Manager & Employee):
+            // Directly inject polished rating/comment into cleanPayload.competencies by name match.
+            if (updateData.competencyReviews && Array.isArray(cleanPayload.competencies)) {
+                updateData.competencyReviews.forEach((u: any) => {
+                    const uName = normalizeString(u.competencyName || u.name || "");
+                    if (!uName) return;
+
+                    const role = u.role || (isManagerAction ? 'manager' : 'employee');
+                    const isManager = (role === 'manager');
+
+                    const rating = Number(isManager ? (u.managerRating ?? u.rating) : (u.employeeRating ?? u.rating ?? 0));
+                    const commentText = u.managerComments ?? u.employeeComments ?? u.comment ?? u.reason ?? u.Comments ?? u.Comment ?? "";
+
+                    let idx = cleanPayload.competencies.findIndex((c2: any) => {
+                        const ctype = String(c2.type || "").toLowerCase();
+                        const target = isManager ? 'manager' : 'employee';
+                        return (ctype === target || (ctype === 'supervisor' && isManager)) && normalizeString(c2.competencyName || c2.title || "").includes(uName);
+                    });
+
+                    if (idx === -1) {
+                        idx = cleanPayload.competencies.findIndex((c2: any) =>
+                            normalizeString(c2.competencyName || c2.title || "").includes(uName) &&
+                            String(c2.role || c2.type || "").toLowerCase() === (isManager ? 'manager' : 'employee')
+                        );
+                    }
+
+                    if (idx !== -1) {
+                        if (rating > 0) {
+                            cleanPayload.competencies[idx].Feedback = rating;
+                            cleanPayload.competencies[idx].feedback = rating;
+                            cleanPayload.competencies[idx].rating = rating;
+                            cleanPayload.competencies[idx].Rating = rating;
+                            if (isManager) {
+                                cleanPayload.competencies[idx].managerRating = rating;
+                                cleanPayload.competencies[idx].manager_rating = rating;
+                                cleanPayload.competencies[idx].type = 'manager';
+                            } else {
+                                cleanPayload.competencies[idx].employeeRating = rating;
+                                cleanPayload.competencies[idx].employee_rating = rating;
+                                cleanPayload.competencies[idx].type = 'employee';
+                            }
+                        }
+                        if (commentText) {
+                            const text = polishFeedback(commentText);
+                            cleanPayload.competencies[idx].Comments = text;
+                            cleanPayload.competencies[idx].comments = text;
+                            cleanPayload.competencies[idx].Comment = text;
+                            cleanPayload.competencies[idx].comment = text;
+                            cleanPayload.competencies[idx].reason = text;
+                            cleanPayload.competencies[idx].feedback_text = text;
+
+                            if (isManager) {
+                                cleanPayload.competencies[idx].managerComments = text;
+                                cleanPayload.competencies[idx].manager_comments = text;
+                                cleanPayload.competencies[idx].managerFeedback = text;
+                            } else {
+                                cleanPayload.competencies[idx].employeeComments = text;
+                                cleanPayload.competencies[idx].employee_comments = text;
+                                cleanPayload.competencies[idx].employeeFeedback = text;
+                            }
+                            console.log(`%c[SAFETY-COMP] ${uName} (${role}) feedback polished and injected.`, 'color: magenta;');
+                        }
+                    }
+                });
+            }
+
             if (updateData.keyAccomplishments || updateData.cm1) {
-                const val = updateData.keyAccomplishments || updateData.cm1;
+                const val = polishFeedback(updateData.keyAccomplishments || updateData.cm1);
                 cleanPayload.keyAccomplishments = val; cleanPayload.cm1 = val;
                 if (!cleanPayload.overallComments) cleanPayload.overallComments = {};
                 cleanPayload.overallComments.cm1 = val;
             }
             if (updateData.nextQuarterPlan || updateData.cm2) {
-                const val = updateData.nextQuarterPlan || updateData.cm2;
+                const val = polishFeedback(updateData.nextQuarterPlan || updateData.cm2);
                 cleanPayload.nextQuarterPlan = val; cleanPayload.cm2 = val;
                 if (!cleanPayload.overallComments) cleanPayload.overallComments = {};
                 cleanPayload.overallComments.cm2 = val;
             }
             if (updateData.managerOverallComments || updateData.cm3) {
-                const val = updateData.managerOverallComments || updateData.cm3;
+                const val = polishFeedback(updateData.managerOverallComments || updateData.cm3);
                 cleanPayload.managerOverallComments = val; cleanPayload.cm3 = val;
                 if (!cleanPayload.overallComments) cleanPayload.overallComments = {};
                 cleanPayload.overallComments.cm3 = val;
             }
-
-            // Ensure calculated ratings are also at top level if not already
-            cleanPayload.overallRating = finalReviewObj.overallRating;
-            cleanPayload.overallScore = finalReviewObj.overallScore;
-            cleanPayload.employeesRating = finalReviewObj.employeesRating;
-            cleanPayload.managersRating = finalReviewObj.managersRating;
-            cleanPayload.totalAchievement = finalReviewObj.totalAchievement;
-
             ['__v', 'createdAt', 'updatedAt'].forEach(f => delete cleanPayload[f]);
             if (cleanPayload.companyId?._id) cleanPayload.companyId = String(cleanPayload.companyId._id);
             if (cleanPayload.employeeId?._id) cleanPayload.employeeId = String(cleanPayload.employeeId._id);
 
-            // 6. Select API Key & URL
-            // Determine if this is a manager-originated update
-            const isManagerAction =
-                (updateData.managerRating !== undefined) ||
-                (updateData.managerComments !== undefined) ||
-                (updateData.manager_comments !== undefined) ||
-                (updateData.managerComment !== undefined) ||
-                (updateData.supervisorComment !== undefined) ||
-                (updateData.objectiveReviews?.some((o: any) => o.managerRating !== undefined || o.managerFeedback !== undefined)) ||
-                (updateData.keyResultReviews?.some((k: any) => k.managerRating !== undefined || k.managerFeedback !== undefined)) ||
-                (updateData.competencyReviews?.some((c: any) =>
-                    c.managerRating !== undefined ||
-                    c.managerComments !== undefined ||
-                    c.managerComment !== undefined ||
-                    c.manager_comments !== undefined
-                ));
+            const apiKey = import.meta.env.VITE_EMPLOYEE_API_KEY;
+            const submitBaseUrl = import.meta.env.VITE_SUBMIT_REVIEW_API_URL || 'https://ai.talentspotifyapp.com/api/reviewForm/updateReviewForm';
 
-            const apiKey = isManagerAction
-                ? (import.meta.env.VITE_MANAGER_API_KEY || import.meta.env.VITE_EMPLOYEE_API_KEY)
-                : import.meta.env.VITE_EMPLOYEE_API_KEY;
+            // Unified URL construction: Use the base submission API for both roles, 
+            // targeting the specific review form document ID.
+            let url = `${submitBaseUrl}/${reviewObj._id}`;
+            url += `${url.includes('?') ? '&' : '?'}companyId=${getCompanyId()}`;
 
-            const url = `${import.meta.env.VITE_SUBMIT_REVIEW_API_URL || 'https://ai.talentspotifyapp.com/api/reviewForm/updateReviewForm'}/${reviewObj._id}?companyId=${getCompanyId()}`;
+            console.log(`%c[SUBMISSION] PUT to URL: ${url} (Role: ${isManagerAction ? 'MANAGER' : 'EMPLOYEE'})`, 'color: blue; font-weight: bold;');
 
-            console.log(`[SYNC] Sending update using ${isManagerAction ? 'Manager' : 'Employee'} API Key.`);
-            console.log(`[SYNC] API Key Info: ${apiKey ? (apiKey.substring(0, 8) + '...' + apiKey.substring(apiKey.length - 8)) : 'MISSING'} (Length: ${apiKey?.length || 0})`);
-            console.info(`[SYNC] Fetching: ${url}`);
             const response = await fetch(url, {
                 method: 'PUT',
                 headers: {
@@ -799,95 +1051,99 @@ export const submitReviewUpdate = async (updateData: any): Promise<boolean> => {
 
             if (response.ok) {
                 console.log("%c[SYNC] API SUCCESS - Record updated in DB.", "color: white; background: #4CAF50; padding: 2px 5px; border-radius: 3px; font-weight: bold;");
-                cachedReviewForm = { ...fullReviewData, data: finalReviewObj };
+
+                // CRITICAL: Invalidate ALL related caches to ensure the Report UI (which uses getFreshReviewForm) is updated
+                cachedReviewForm = null;
+                lastReviewFetchTime = 0;
+
+                if (isManagerAction) {
+                    lastManagerReviewFetchTime = 0;
+                    cachedManagerReviewForm = null;
+                } else {
+                    lastEmployeeReviewFetchTime = 0;
+                    cachedEmployeeReviewForm = null;
+                }
+
+                // Re-fetch the updated form immediately to populate cache
+                if (isManagerAction) await getFreshManagerReviewForm(true);
+                else await getFreshEmployeeReviewForm(true);
+
                 window.dispatchEvent(new CustomEvent('review-data-updated'));
                 return true;
             } else {
                 const errText = await response.text();
-                console.error(`%c[SYNC] API ERROR (${response.status}):`, "color: white; background: #F44336; padding: 2px 5px; border-radius: 3px;", errText);
+                console.error(`[SYNC] API ERROR:`, response.status, errText);
+                return false;
             }
-            return false;
         } catch (e) {
             console.error("[SUBMISSION] Sync Error:", e);
             return false;
         }
-    }));
+    });
 
-    // If caller needs to wait, they can await the promise, 
-    // but we return true immediately for Vapi to move on
-    return true;
+    return await updateMutex;
 };
 
-// Keep existing exports for backward compatibility but route to new implementation
 export const submitEmployeeSelfAssessment = (reviewData: any) => submitReviewUpdate(reviewData);
 export const submitCompetencyReview = (reviewData: any) => submitReviewUpdate(reviewData);
 
 export const updateKeyResult = async (id: string, currentValue: string): Promise<boolean> => {
     console.log(`[DEBUG] updateKeyResult called. ID: ${id}, Value: ${currentValue}`);
-    // Optimistic Update for report view
-    if (cachedReviewForm && cachedReviewForm.data) {
-        // Sync to review form goals children immediately
-        const dummyReviewData = { keyResultReviews: [{ id, actual: Number(currentValue) }] };
-        optimisticUpdateCache(dummyReviewData);
 
-        // Force immediate UI refresh
-        setTimeout(() => {
-            window.dispatchEvent(new CustomEvent('review-data-updated'));
-        }, 0);
-    }
+    // Optimistic Update
+    const dummyReviewData = { keyResultReviews: [{ id, actual: Number(currentValue) }] };
+    optimisticUpdateCache(dummyReviewData);
 
     const apiKey = import.meta.env.VITE_EMPLOYEE_API_KEY;
     const updateUrlBase = import.meta.env.VITE_UPDATE_KEY_RESULT_API_URL || 'https://ai.talentspotifyapp.com/api/keyresults/updatekeyResult';
     const companyId = getCompanyId();
 
-    // Run the actual network update in the background
-    (async () => {
-        try {
-            let fullKeyResultObj: any = null;
-            let objectiveIndex = -1;
-            let krIndex = -1;
+    try {
+        let fullKeyResultObj: any = null;
+        let objectiveIndex = -1;
+        let krIndex = -1;
 
-            for (let i = 0; i < okrCache.length; i++) {
-                const objective = okrCache[i];
-                const children = objective.children || objective.keyResults || [];
-                const foundIndex = children.findIndex((kr: any) => String(kr.id || kr._id || kr.krID || "").trim() === String(id || "").trim());
-                if (foundIndex !== -1) {
-                    fullKeyResultObj = { ...children[foundIndex] };
-                    objectiveIndex = i;
-                    krIndex = foundIndex;
-                    break;
-                }
+        for (let i = 0; i < okrCache.length; i++) {
+            const objective = okrCache[i];
+            const children = objective.children || objective.keyResults || [];
+            const foundIndex = children.findIndex((kr: any) => String(kr.id || kr._id || kr.krID || "").trim() === String(id || "").trim());
+            if (foundIndex !== -1) {
+                fullKeyResultObj = { ...children[foundIndex] };
+                objectiveIndex = i;
+                krIndex = foundIndex;
+                break;
             }
-
-            if (fullKeyResultObj) {
-                fullKeyResultObj.actual = Number(currentValue); // Supports decimal
-                fullKeyResultObj.updatedAt = new Date().toISOString();
-            } else {
-                fullKeyResultObj = { actual: Number(currentValue) };
-            }
-
-            const url = `${updateUrlBase}/${id}?companyId=${companyId}`;
-            const response = await fetch(url, {
-                method: 'PUT',
-                headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify(fullKeyResultObj)
-            });
-
-            if (response.ok) {
-                console.log(`[OKR UPDATE] SYNC SUCCESS for ID: ${id}.`);
-                if (objectiveIndex !== -1 && krIndex !== -1) {
-                    okrCache[objectiveIndex].children[krIndex] = { ...okrCache[objectiveIndex].children[krIndex], ...fullKeyResultObj };
-                }
-                window.dispatchEvent(new CustomEvent('review-data-updated'));
-            } else {
-                const errText = await response.text();
-                console.error(`[OKR UPDATE] SYNC FAILED for ID: ${id}. Status: ${response.status}.`);
-            }
-        } catch (error) {
-            console.error('[OKR UPDATE] Sync Error:', error);
         }
-    })();
 
-    // Return true immediately so UI/Vapi doesn't hang
-    return true;
+        if (fullKeyResultObj) {
+            fullKeyResultObj.actual = Number(currentValue);
+            fullKeyResultObj.updatedAt = new Date().toISOString();
+        } else {
+            fullKeyResultObj = { actual: Number(currentValue) };
+        }
+
+        const url = `${updateUrlBase}/${id}?companyId=${companyId}`;
+        const response = await fetch(url, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify(fullKeyResultObj)
+        });
+
+        if (response.ok) {
+            console.log(`[OKR UPDATE] Database SUCCESS for ID: ${id}.`);
+            if (objectiveIndex !== -1 && krIndex !== -1) {
+                if (!okrCache[objectiveIndex].children) okrCache[objectiveIndex].children = [];
+                okrCache[objectiveIndex].children[krIndex].actual = Number(currentValue);
+            }
+            lastReviewFetchTime = 0; // Invalidate review form cache too
+            window.dispatchEvent(new CustomEvent('review-data-updated'));
+            return true;
+        } else {
+            console.error(`[OKR UPDATE] Database FAILED status: ${response.status}`);
+            return false;
+        }
+    } catch (error) {
+        console.error('[OKR UPDATE] Error:', error);
+        return false;
+    }
 };

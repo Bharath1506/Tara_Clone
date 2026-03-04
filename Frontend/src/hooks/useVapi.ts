@@ -230,6 +230,8 @@ export const useVapi = () => {
                                     }
                                 }
                                 updateData.id = targetReviewId;
+                                updateData.role = role;
+                                updateData.type = type;
 
                                 const typeLower = String(type || "").toLowerCase();
                                 if (typeLower === 'objective') {
@@ -246,11 +248,17 @@ export const useVapi = () => {
                                     updateData.keyResultReviews = [krReview];
                                     console.log(`[VAPI TOOL] Preparing key result review update (Rating Only):`, krReview);
                                 } else if (typeLower === 'competency') {
-                                    const competencyData: any = { competencyName: name };
-                                    if (rating !== undefined) competencyData[`${role}Rating`] = rating;
-                                    if (comment !== undefined) competencyData[`${role}Comments`] = comment;
+                                    const competencyData: any = { competencyName: name, role: role };
+                                    if (rating !== undefined) {
+                                        competencyData[`${role}Rating`] = rating;
+                                        competencyData.rating = rating;
+                                    }
+                                    if (comment !== undefined) {
+                                        competencyData[`${role}Comments`] = comment;
+                                        competencyData.comment = comment;
+                                    }
                                     updateData.competencyReviews = [competencyData];
-                                    console.log(`[VAPI TOOL] Preparing competency review update:`, competencyData);
+                                    console.log(`[VAPI TOOL] Preparing competency review update for ${role}:`, competencyData);
                                 } else if (typeLower.includes('accomplishment')) {
                                     updateData.keyAccomplishments = comment;
                                     updateData.cm1 = comment;
@@ -278,12 +286,27 @@ export const useVapi = () => {
                                 success = await (submitEmployeeSelfAssessment as any)(updateData);
 
                                 if (success) {
-                                    toast({
-                                        title: "Review Updated",
-                                        description: `${role === 'employee' ? 'Employee' : 'Manager'} ${type} has been saved.`,
-                                        variant: "default",
-                                        className: "bg-purple-100 border-purple-500 text-purple-900"
-                                    });
+                                    // Show specific toast for competency updates
+                                    if (typeLower === 'competency') {
+                                        const roleLabel = role === 'manager' ? '👔 Manager' : '👤 Employee';
+                                        const updateType = rating !== undefined ? `Rating: ${rating}/5` : `Reason saved`;
+                                        const competencyName = name || 'Competency';
+                                        toast({
+                                            title: `✅ ${competencyName} Updated`,
+                                            description: `${roleLabel} — ${updateType} saved to database.`,
+                                            variant: "default",
+                                            className: role === 'manager'
+                                                ? "bg-purple-100 border-purple-500 text-purple-900"
+                                                : "bg-green-100 border-green-500 text-green-900"
+                                        });
+                                    } else {
+                                        toast({
+                                            title: "✅ Review Updated",
+                                            description: `${role === 'employee' ? 'Employee' : 'Manager'} ${type} has been saved.`,
+                                            variant: "default",
+                                            className: "bg-purple-100 border-purple-500 text-purple-900"
+                                        });
+                                    }
                                 }
 
                                 const detail = rating !== undefined ? "rating" : (comment ? "reason/comment" : "update");

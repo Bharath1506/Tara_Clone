@@ -124,19 +124,9 @@ export const VapiVoiceInterface = () => {
         }
     }, [isCallActive]);
 
-    // Handle redirect after showing thank you
+    // Manual reset is handled by buttons in the Thank You card
     useEffect(() => {
-        if (showThankYou) {
-            const timer = setTimeout(() => {
-                setShowThankYou(false);
-                setHasStartedCall(false);
-                setManagerConsent(false);
-                setEmployeeConsent(false);
-                setEmployeeName('');
-                setManagerName('');
-            }, 20000); // Show for 20 seconds
-            return () => clearTimeout(timer);
-        }
+        // This useEffect previously handled auto-redirect, which is now replaced by manual actions
     }, [showThankYou]);
 
     const scrollToBottom = () => {
@@ -244,25 +234,70 @@ ${'='.repeat(60)}
             {/* Thank You Card */}
             {showThankYou && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-300">
-                    <Card className="w-full max-w-md bg-white shadow-2xl rounded-3xl p-12 flex flex-col items-center space-y-6 border-none animate-in zoom-in duration-500">
+                    <Card className="w-full max-w-md bg-white shadow-2xl rounded-3xl p-10 flex flex-col items-center space-y-6 border-none animate-in zoom-in duration-500">
                         {/* Heart Icon with Animation */}
                         <div className="relative">
                             <div className="absolute inset-0 rounded-full bg-[#8da356]/20 animate-ping" style={{ animationDuration: '1.5s' }}></div>
-                            <div className="bg-[#8da356]/10 h-24 w-24 flex items-center justify-center rounded-full relative z-10">
-                                <Heart className="h-12 w-12 text-[#8da356] fill-[#8da356] animate-pulse" />
+                            <div className="bg-[#8da356]/10 h-20 w-20 flex items-center justify-center rounded-full relative z-10">
+                                <Heart className="h-10 w-10 text-[#8da356] fill-[#8da356] animate-pulse" />
                             </div>
                         </div>
 
                         {/* Thank You Message */}
                         <div className="text-center space-y-3">
-                            <h2 className="text-3xl font-bold text-[#333]">Thank You!</h2>
-                            <p className="text-base text-[#666]">Your performance review session has been completed successfully.</p>
+                            <h2 className="text-2xl font-bold text-[#333]">Session Completed</h2>
+                            <p className="text-base text-[#666] leading-relaxed">
+                                Thank you for your time. The performance review session is completed. You may now generate the report.
+                            </p>
                         </div>
 
-                        {/* Redirect Message */}
-                        <div className="flex items-center gap-2 text-sm text-[#888]">
-                            <div className="h-2 w-2 rounded-full bg-[#8da356] animate-pulse"></div>
-                            <span>Redirecting to home...</span>
+                        {/* Action Buttons */}
+                        <div className="flex flex-col w-full gap-3">
+                            <Button
+                                onClick={() => {
+                                    setIsGeneratingReport(true);
+                                    const steps = [
+                                        "Connecting to TalentSpotify Intelligence...",
+                                        "Analyzing conversation transcripts...",
+                                        "Calculating performance indicators...",
+                                        "Synchronizing OKR progress data...",
+                                        "Optimizing report visual layout...",
+                                        "Generating your performance report..."
+                                    ];
+
+                                    let currentStep = 0;
+                                    const interval = setInterval(() => {
+                                        currentStep++;
+                                        if (currentStep < steps.length) {
+                                            setGeneratingStep(currentStep);
+                                        } else {
+                                            clearInterval(interval);
+                                            setTimeout(() => {
+                                                navigate('/report', { state: { messages, callStartTime, employeeName, managerName } });
+                                            }, 600);
+                                        }
+                                    }, 700);
+                                }}
+                                className="w-full bg-[#8da356] hover:bg-[#7a8f4b] text-white py-6 rounded-xl text-lg font-bold shadow-lg transition-all hover:scale-[1.02] flex items-center justify-center gap-3"
+                            >
+                                <Sparkles className="h-5 w-5" />
+                                Generate Report
+                            </Button>
+
+                            <Button
+                                variant="ghost"
+                                onClick={() => {
+                                    setShowThankYou(false);
+                                    setHasStartedCall(false);
+                                    setManagerConsent(false);
+                                    setEmployeeConsent(false);
+                                    setEmployeeName('');
+                                    setManagerName('');
+                                }}
+                                className="text-muted-foreground"
+                            >
+                                Return to Dashboard
+                            </Button>
                         </div>
                     </Card>
                 </div>

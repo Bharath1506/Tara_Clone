@@ -319,9 +319,53 @@ const Report = () => {
         return comp.Comments || comp.comments || comp.Comment || comp.comment || comp.feedback_text || '';
     };
 
+    const findCompetencyRecord = (role: 'employee' | 'manager', name: string) => {
+        if (!competencies || competencies.length === 0) return undefined;
+        const target = (name || '').toLowerCase().trim();
+
+        const matchesName = (c: any) => {
+            const cname = (c.competencyName || c.title || '').toLowerCase().trim();
+            return cname === target;
+        };
+
+        if (role === 'employee') {
+            // Prefer explicit employee/self type
+            const byType = competencies.find((c: any) => {
+                const t = String(c.type || '').toLowerCase();
+                return (t === 'employee' || t === 'self') && matchesName(c);
+            });
+            if (byType) return byType;
+
+            // Fallback: any matching competency without explicit manager rating fields
+            return competencies.find((c: any) =>
+                matchesName(c) &&
+                c.managerRating == null &&
+                c.manager_rating == null &&
+                !c.managerComments &&
+                !c.manager_comments
+            );
+        }
+
+        // Manager record
+        const byType = competencies.find((c: any) => {
+            const t = String(c.type || '').toLowerCase();
+            return (t === 'manager' || t === 'supervisor') && matchesName(c);
+        });
+        if (byType) return byType;
+
+        // Fallback: any matching competency that has a manager rating/comment stored
+        return competencies.find((c: any) =>
+            matchesName(c) &&
+            (c.managerRating != null ||
+                c.manager_rating != null ||
+                !!c.managerComments ||
+                !!c.manager_comments)
+        );
+    };
+
     const competencyData = competencyOrder.map(name => {
-        const selfComp = competencies.find((c: any) => c.type === 'employee' && (c.competencyName === name || c.title === name));
-        const mgrComp = competencies.find((c: any) => c.type === 'manager' && (c.competencyName === name || c.title === name));
+        const selfComp = findCompetencyRecord('employee', name);
+        const mgrComp = findCompetencyRecord('manager', name);
         const selfScore = getCompetencyScore(selfComp);
         const mgrScore = getCompetencyScore(mgrComp);
         return {
