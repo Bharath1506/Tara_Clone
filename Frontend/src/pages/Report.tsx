@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/tooltip"
 import { OKRTable } from '@/components/OKRTable';
 import { CompetencyTable } from '@/components/CompetencyTable';
-import { fetchReviewForm, fetchEmployeeOKRs, getFreshReviewForm } from '@/services/okrService';
+import { fetchEmployeeOKRs, getFreshReviewForm } from '@/services/okrService';
 import logoImage from '@/assets/talentspotify-logo.png';
 
 // Scroll to section helper
@@ -65,7 +65,7 @@ const Report = () => {
         const loadData = async () => {
             console.log("%c[REPORT] Loading review data...", "color: cyan; font-weight: bold;");
             try {
-                const response = await getFreshReviewForm();
+                const response = await getFreshReviewForm(true);
                 console.log("[REPORT] API Response received:", response);
 
                 if (!response || !response.data) {
