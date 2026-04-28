@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/tooltip"
 import { OKRTable } from '@/components/OKRTable';
 import { CompetencyTable } from '@/components/CompetencyTable';
-import { fetchEmployeeOKRs, getFreshReviewForm } from '@/services/okrService';
+import { fetchEmployeeOKRs, getFreshReviewForm, getFreshEmployeeReviewForm } from '@/services/okrService';
 import logoImage from '@/assets/talentspotify-logo.png';
 
 // Scroll to section helper
@@ -65,35 +65,58 @@ const Report = () => {
         const loadData = async () => {
             console.log("%c[REPORT] Loading review data...", "color: cyan; font-weight: bold;");
             try {
-                const response = await getFreshReviewForm(true);
-                console.log("[REPORT] API Response received:", response);
+                console.log("[REPORT] Attempting to fetch Employee-view list...");
+                let response = await getFreshEmployeeReviewForm(true);
 
-                if (!response || !response.data) {
-                    console.error("[REPORT] No data in API response");
+                // Fallback Logic: Try to find a match in the Employee list first, 
+                // then fall back to the Manager list if empty or not matching.
+                const checkMatch = (list: any[]) => {
+                    if (!list || list.length === 0) return null;
+                    if (!stateEmployeeName) return list[0];
+                    const target = stateEmployeeName.toLowerCase().trim();
+                    return list.find(r => {
+                        const dbName = (r.employeeFullName || "").toLowerCase().trim();
+                        return dbName === target || dbName.includes(target) || target.includes(dbName);
+                    });
+                };
+
+                let initialList = response?.data || response;
+                let reviewList: any[] = [];
+                if (Array.isArray(initialList)) reviewList = initialList;
+                else if (initialList?.review) reviewList = [initialList.review];
+                else if (initialList?.data) reviewList = Array.isArray(initialList.data) ? initialList.data : [initialList.data];
+                else if (initialList && (initialList._id || initialList.id)) reviewList = [initialList];
+
+                let reviewObj = checkMatch(reviewList);
+
+                if (!reviewObj) {
+                    console.log("[REPORT] No match in Employee list, trying Manager-view fetch...");
+                    const mgrResp = await getFreshReviewForm(true);
+                    const mgrData = mgrResp?.data || mgrResp;
+                    let mgrList: any[] = [];
+                    if (Array.isArray(mgrData)) mgrList = mgrData;
+                    else if (mgrData?.review) mgrList = [mgrData.review];
+                    else if (mgrData && (mgrData._id || mgrData.id)) mgrList = [mgrData];
+                    
+                    const mgrMatch = checkMatch(mgrList);
+                    if (mgrMatch) {
+                        reviewObj = mgrMatch;
+                        reviewList = mgrList;
+                        console.log("[REPORT] Found match in Manager-view API.");
+                    }
+                }
+
+                if (!reviewObj && reviewList.length > 0) {
+                    reviewObj = reviewList[0];
+                    console.warn("[REPORT] No name match found. Falling back to most recent review.");
+                }
+
+                if (!reviewObj) {
+                    console.warn("[REPORT] No review data found after trying both Employee and Manager APIs.");
                     setLoading(false);
                     return;
                 }
 
-                // Handle both array and single object responses
-                let reviewList: any[] = [];
-                if (Array.isArray(response.data)) {
-                    reviewList = response.data;
-                } else if (response.data.review) {
-                    reviewList = [response.data.review];
-                } else if (response.data && typeof response.data === 'object' && (response.data._id || response.data.id)) {
-                    reviewList = [response.data];
-                }
-
-                console.log(`[REPORT] Found ${reviewList.length} reviews. Sorting...`);
-
-                // Sort by most recently updated/created
-                reviewList.sort((a, b) => {
-                    const dateA = new Date(a.updatedAt || a.createdAt || 0).getTime();
-                    const dateB = new Date(b.updatedAt || b.createdAt || 0).getTime();
-                    return dateB - dateA;
-                });
-
-                let reviewObj = reviewList[0];
                 console.log("[REPORT] Selected Review Object ID:", reviewObj?._id || reviewObj?.id);
 
                 // --- LIVE PROGRESS SYNC ---
@@ -130,24 +153,27 @@ const Report = () => {
                         reviewObj.goals = existingGoals.map((g: any) => {
                             const liveOkr = sourceOkrs.find((so: any) =>
                                 String(so._id || so.id || "").trim() === String(g._id || g.id || "").trim() ||
-                                (so.objective || "").trim().toLowerCase() === (g.objective || "").trim().toLowerCase()
+                                (so.objective || "").trim().toLowerCase() === (g.objective || "").trim().toLowerCase() ||
+                                (so.objective || "").trim().toLowerCase().includes((g.objective || "").trim().toLowerCase())
                             );
 
                             if (liveOkr) {
                                 let updatedG = { ...g };
-                                updatedG.progressStatus = liveOkr.progressStatus || liveOkr.progress || g.progressStatus;
+                                updatedG.progressStatus = liveOkr.progressStatus ?? liveOkr.progress ?? g.progressStatus ?? 0;
 
+                                const liveKrs = liveOkr.children || liveOkr.keyResults || [];
                                 if (updatedG.children) {
                                     updatedG.children = updatedG.children.map((ch: any) => {
-                                        const liveKr = (liveOkr.children || liveOkr.keyResults || []).find((sk: any) =>
+                                        const liveKr = liveKrs.find((sk: any) =>
                                             String(sk._id || sk.id || "").trim() === String(ch._id || ch.id || ch.krID || "").trim() ||
-                                            (sk.keyResultName || sk.description || "").trim().toLowerCase() === (ch.keyResultName || "").trim().toLowerCase()
+                                            (sk.keyResultName || sk.description || "").trim().toLowerCase() === (ch.keyResultName || "").trim().toLowerCase() ||
+                                            (sk.keyResultName || sk.description || "").trim().toLowerCase().includes((ch.keyResultName || "").trim().toLowerCase())
                                         );
                                         if (liveKr) {
                                             return {
                                                 ...ch,
-                                                actual: liveKr.actual || liveKr.current || ch.actual,
-                                                targetValue: liveKr.target || liveKr.targetValue || ch.targetValue
+                                                actual: liveKr.actual ?? liveKr.current ?? ch.actual ?? 0,
+                                                targetValue: liveKr.target ?? liveKr.targetValue ?? ch.targetValue ?? 0
                                             };
                                         }
                                         return ch;
@@ -168,7 +194,7 @@ const Report = () => {
                 // 3. The API Key Identity (Token)
                 try {
                     // Filter out "undefined" or placeholder names from the database
-                    const isDbNameValid = (name: string) => name && !name.toLowerCase().includes("undefined") && name.trim() !== "";
+                    const isDbNameValid = (name: string) => name && !name.toLowerCase().includes("undefined") && name.trim() !== "" && name.trim() !== "Employee Name";
 
                     if (!isDbNameValid(reviewObj.employeeFullName)) {
                         // Priority 2: Use matching name from Consent Form
@@ -324,8 +350,21 @@ const Report = () => {
         const target = (name || '').toLowerCase().trim();
 
         const matchesName = (c: any) => {
-            const cname = (c.competencyName || c.title || '').toLowerCase().trim();
-            return cname === target;
+            const rawName = (c.competencyName || c.title || '').toLowerCase().trim();
+            if (!rawName) return false;
+            if (rawName === target) return true;
+            
+            // Fuzzy Match: e.g. "Ownership" matches "Ownership & Accountability"
+            // or "Leadership Skills" matches "Leadership"
+            const n = rawName.replace(/&/g, 'and').replace(/\s+/g, ' ');
+            const t = target.replace(/&/g, 'and').replace(/\s+/g, ' ');
+            
+            if (n.includes(t) || t.includes(n)) return true;
+            
+            // Handle parts
+            const nParts = n.split(/[\s,]/).filter(p => p.length > 3);
+            const tParts = t.split(/[\s,]/).filter(p => p.length > 3);
+            return nParts.some(np => tParts.some(tp => np === tp || np.includes(tp) || tp.includes(np)));
         };
 
         if (role === 'employee') {
