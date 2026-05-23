@@ -76,6 +76,275 @@ const polishFeedback = (text: string | null | undefined): string => {
 // Utility for string normalization
 const normalizeString = (s: string) => (s || "").toLowerCase().trim().replace(/&/g, 'and').replace(/\s+/g, ' ');
 
+const sampleReviewMetadata = {
+    _id: '69c36e6db4602c087d3bb985',
+    id: '69c36e6db4602c087d3bb985',
+    employeeName: '68e240b0d9876d59139672d6',
+    employeeId: '68e240b0d9876d59139672d6',
+    employeeFullName: 'Ravi K',
+    managerName: 'Madhavi peddireddy',
+    managerId: '68e49939df33a7c9177aaf03',
+    employeeRole: 'Employee',
+    reviewPeriod: '2026-03-31',
+    totalAchievement: '18',
+    startDate: '2026-03-31',
+    endDate: '2026-03-31',
+    attachment: '',
+    templateName: 'Demo Template',
+    templateId: '68e3a755247aa2bffbd13c81',
+    companyId: '6396f7d703546500086f0200',
+    formId: 'REVIEW_FORM_3118653',
+    status: 'Employee SignOff',
+    managerSubmissionDate: '2026-03-21T07:08:42.178Z',
+    employeeSubmissionDate: '2026-03-21T07:08:42.178Z',
+    employeesRating: '0.90',
+    averageRating: '1.82',
+    reviewPeriodStartDate: '2026-04-01',
+    reviewPeriodEndDate: '2026-04-30',
+    createdAt: '2026-03-25T05:11:09.819Z',
+    updatedAt: new Date().toISOString()
+};
+
+const sampleReviewComments = {
+    cm1: 'In the last quarter, I collaborated with cross-functional teams to ensure timely completion of tasks. I also adopted a customer-centric approach by actively collecting feedback and implementing improvements based on customer needs. Additionally, I successfully handled a critical escalation, ensuring it was resolved effectively and maintained customer satisfaction',
+    cm2: 'I want to concentrate on the areas where I am lacking and will work on them after report generation.',
+    cm3: 'Demonstrates a strong sense of ownership, collaboration, and customer focus. Effectively manages responsibilities, including handling escalations and working with cross-functional teams. Shows good potential for growth, especially in leadership and continuous improvement. With increased focus on skill enhancement and addressing improvement areas, can take on more challenging responsibilities in the upcoming quarters.'
+};
+
+const sampleReviewCompetencies = [
+    {
+        competencyName: 'Ownership & Accountability',
+        type: 'employee',
+        rating: 3,
+        comments: 'Ravi took ownership of the project and delivered it, but there were a couple of escalations that reached the manager.'
+    },
+    {
+        competencyName: 'Professionalism',
+        type: 'employee',
+        rating: 3,
+        comments: 'Last week, an escalation came up, and I think we handled the situation properly.'
+    },
+    {
+        competencyName: 'Customer Focus',
+        type: 'employee',
+        rating: 3,
+        comments: 'I prioritize customer needs by actively collecting feedback and implementing solutions that enhance their experience.'
+    },
+    {
+        competencyName: 'Leadership',
+        type: 'employee',
+        rating: 3,
+        comments: 'Whenever it is required I guided my juniors.'
+    },
+    {
+        competencyName: 'Collaboration',
+        type: 'employee',
+        rating: 4,
+        comments: 'Recently, I collaborated with cross-functional teams and contributed to the successful completion of tasks.'
+    },
+    {
+        competencyName: 'Ownership & Accountability',
+        type: 'manager',
+        rating: 4,
+        comments: 'Ravi delivered the project but faced escalations. Leadership coaching and experience will help him handle such situations better. Hence, 3 out of 5.'
+    },
+    {
+        competencyName: 'Professionalism',
+        type: 'manager',
+        rating: 4,
+        comments: 'Handled escalations effectively with a calm and solution-oriented mindset, ensuring minimal impact and timely resolution.'
+    },
+    {
+        competencyName: 'Customer Focus',
+        type: 'manager',
+        rating: 3,
+        comments: 'Actively gathers customer feedback and translates it into actionable improvements, contributing to enhanced customer satisfaction.'
+    },
+    {
+        competencyName: 'Leadership',
+        type: 'manager',
+        rating: 2,
+        comments: 'Supports junior team members when required, but needs to further strengthen leadership consistency.'
+    },
+    {
+        competencyName: 'Collaboration',
+        type: 'manager',
+        rating: 3,
+        comments: 'Collaborates well with cross-functional teams to ensure smooth execution and successful completion of tasks.'
+    }
+];
+
+const buildDummyReviewFormResponse = (okrs: OKR[] = []) => {
+    const buildGoalFromOKR = (okr: any, index: number) => ({
+        id: okr.id || okr._id || index + 1,
+        _id: okr._id || okr.id || `goal-${index + 1}`,
+        employeeName: 'Ravi K',
+        okrPeriod: okr.okrPeriod || 'Q1',
+        okrYear: okr.okrYear || 2026,
+        objective: okr.objective || okr.title || okr.name || `Objective ${index + 1}`,
+        dueDate: okr.dueDate || '30 Apr 2026',
+        weight: okr.weight ?? 0,
+        rewardPoints: okr.rewardPoints ?? 0,
+        owner: 'Ravi K',
+        profilePicture: okr.profilePicture || '',
+        progressStatus: okr.progressStatus ?? okr.progress ?? okr.percent ?? 0,
+        feedAttachment: okr.feedAttachment || '',
+        comments: okr.comments || okr.feedback || okr.reason || '',
+        employeeReferenceId: okr.employeeReferenceId || okr.userId || '',
+        updatedAt: okr.updatedAt || new Date().toISOString(),
+        cascaded: okr.cascaded ?? false,
+        dimension: okr.dimension || '',
+        objectiveStatus: okr.objectiveStatus || '',
+        employeeRating: okr.employeeRating ?? okr.employee_rating ?? okr.rating ?? 0,
+        managerRating: okr.managerRating ?? okr.manager_rating ?? 0,
+        employee_rating: okr.employee_rating ?? okr.employeeRating ?? okr.rating ?? 0,
+        rating: okr.rating ?? okr.employeeRating ?? okr.managerRating ?? 0,
+        Rating: okr.Rating ?? okr.rating ?? 0,
+        score: okr.score ?? 0,
+        feedback: okr.feedback || okr.comment || okr.reason || '',
+        comment: okr.comment || okr.feedback || okr.reason || '',
+        reason: okr.reason || okr.comment || okr.feedback || '',
+        employeeFeedback: okr.employeeFeedback || okr.feedback || okr.comment || '',
+        employee_feedback: okr.employee_feedback || okr.employeeFeedback || '',
+        children: (okr.children || okr.keyResults || []).map((kr: any, childIndex: number) => ({
+            _id: kr._id || kr.id || kr.krID || `kr-${index + 1}-${childIndex + 1}`,
+            isGifShown: kr.isGifShown ?? false,
+            isAlignedToCompany: kr.isAlignedToCompany || kr.isAligned || 'No',
+            approvalRequired: kr.approvalRequired ?? false,
+            pending: kr.pending ?? null,
+            comments: kr.comments || kr.comment || '',
+            okrName: kr.okrName || kr.keyResultName || kr.description || kr.title || `Key Result ${childIndex + 1}`,
+            dimension: kr.dimension || '',
+            keyResultName: kr.keyResultName || kr.okrName || kr.description || kr.title || `Key Result ${childIndex + 1}`,
+            polarity: kr.polarity || 'positive',
+            msc: kr.msc || '',
+            targetDate: kr.targetDate || '',
+            actualDate: kr.actualDate || '',
+            target: String(kr.target ?? kr.targetValue ?? 0),
+            actual: kr.actual ?? kr.current ?? 0,
+            feedAttachment: kr.feedAttachment || '',
+            objectiveId: kr.objectiveId || kr.parentObjectiveId || okr._id || '',
+            krID: kr.krID || kr.id || `KR_${index + 1}_${childIndex + 1}`,
+            userId: kr.userId || okr.employeeReferenceId || '',
+            unit: kr.unit || kr.uom || kr.metrics || '',
+            source: kr.source || '',
+            kpiId: kr.kpiId || '',
+            query: kr.query || '',
+            kpiName: kr.kpiName || '',
+            status: kr.status || 'inProgress',
+            jiraKey: kr.jiraKey || '',
+            jiraStatus: kr.jiraStatus || '',
+            companyId: kr.companyId || sampleReviewMetadata.companyId,
+            createdAt: kr.createdAt || new Date().toISOString(),
+            updatedAt: kr.updatedAt || new Date().toISOString(),
+            basevalue: kr.basevalue ?? null,
+            frequency: kr.frequency ?? null,
+            owner: kr.owner || 'Ravi K',
+            ownerName: kr.ownerName || 'Ravi K',
+            functionName: kr.functionName || okr.functionName || '',
+            designation: kr.designation || okr.designation || '',
+            profilePicture: kr.profilePicture || '',
+            rewardPoints: kr.rewardPoints ?? 0,
+            objective: kr.objective || kr.title || kr.name || ''
+        }))
+    });
+
+    const goals = okrs.length > 0 ? okrs.map(buildGoalFromOKR) : [
+        {
+            id: 1,
+            _id: '69c4cacb71526b6dad5cc12d',
+            employeeName: 'Ravi K',
+            okrPeriod: 'Q1',
+            okrYear: 2026,
+            objective: 'Develop Customer Success Team',
+            dueDate: '30 Apr 2026',
+            weight: 30,
+            rewardPoints: 0,
+            owner: 'Ravi K',
+            profilePicture: '',
+            progressStatus: 60,
+            feedAttachment: '',
+            comments: 'testing',
+            employeeReferenceId: '68e240b0d9876d59139672d6',
+            updatedAt: '2026-03-27T13:31:02.114Z',
+            children: [
+                {
+                    _id: '69c4cbce71526b6dad5cc140',
+                    isGifShown: false,
+                    isAlignedToCompany: 'No',
+                    approvalRequired: false,
+                    pending: null,
+                    comments: '',
+                    okrName: 'Hire 10 employees into Customer Success Team by end of April',
+                    dimension: '',
+                    keyResultName: 'Hire 10 employees into Customer Success Team by end of April',
+                    polarity: 'positive',
+                    msc: '',
+                    targetDate: '2026-04-30T00:00:00.000Z',
+                    actualDate: '2026-04-30T00:00:00.000Z',
+                    target: '10',
+                    actual: 6,
+                    feedAttachment: '',
+                    objectiveId: '69c4cacb71526b6dad5cc12d',
+                    krID: 'KR_8357348',
+                    userId: '68e240b0d9876d59139672d6',
+                    source: '',
+                    kpiId: '',
+                    query: '',
+                    kpiName: '',
+                    status: 'inProgress',
+                    unit: 'number',
+                    jiraKey: '',
+                    jiraStatus: '',
+                    companyId: '6396f7d703546500086f0200',
+                    createdAt: '2026-03-26T06:01:50.488Z',
+                    updatedAt: '2026-03-27T13:31:59.259Z',
+                    basevalue: null,
+                    frequency: null,
+                    owner: 'Ravi K',
+                    ownerName: 'Ravi K',
+                    functionName: 'Data Science',
+                    designation: 'Data Science - Intern',
+                    profilePicture: '',
+                    rewardPoints: 0,
+                    objective: 'testing task'
+                }
+            ],
+            cascaded: false,
+            dimension: '',
+            objectiveStatus: 'Create',
+            employeeRating: 3,
+            managerRating: 3,
+            employee_rating: 3,
+            rating: 3,
+            Rating: 3,
+            score: 3,
+            feedback: 'We were supposed to hire 10 employees by the end of April. Although we hired a few, some left, resulting in a net of 6 hires. Hence, I rated it 3 out of 5.',
+            comment: 'We were supposed to hire 10 employees by the end of April. Although we hired a few, some left, resulting in a net of 6 hires. Hence, I rated it 3 out of 5.',
+            reason: 'We were supposed to hire 10 employees by the end of April. Although we hired a few, some left, resulting in a net of 6 hires. Hence, I rated it 3 out of 5.',
+            employeeFeedback: 'We were supposed to hire 10 employees by the end of April. Although we hired a few, some left, resulting in a net of 6 hires. Hence, I rated it 3 out of 5.',
+            employee_feedback: 'We were supposed to hire 10 employees by the end of April. Although we hired a few, some left, resulting in a net of 6 hires. Hence, I rated it 3 out of 5.'
+        }
+    ];
+
+    return {
+        success: true,
+        message: 'Reviews Retrieved Successfully!',
+        data: [
+            {
+                ...sampleReviewMetadata,
+                overallRating: 3,
+                overalComments: sampleReviewComments,
+                overallComments: sampleReviewComments,
+                goals,
+                competencies: sampleReviewCompetencies
+            }
+        ]
+    };
+};
+
+const useDummyReviewFallback = import.meta.env.VITE_FALLBACK_DUMMY_REVIEW === 'true';
+
 // Cache to store the full KR objects so we can send complete payloads on update
 let okrCache: any[] = [];
 
@@ -139,14 +408,29 @@ export const fetchEmployeeOKRs = async (): Promise<OKR[]> => {
     }
 };
 
+const getReviewFormApiKey = (role: 'employee' | 'manager'): string | null => {
+    const employeeKey = import.meta.env.VITE_EMPLOYEE_API_KEY;
+    const managerKey = import.meta.env.VITE_MANAGER_API_KEY;
+    if (role === 'manager') return managerKey || employeeKey || null;
+    return employeeKey || managerKey || null;
+};
+
+const hasReviewData = (payload: any): boolean => {
+    if (!payload || typeof payload !== 'object') return false;
+    if (Array.isArray(payload.data) && payload.data.length > 0) return true;
+    if (payload.data && Array.isArray(payload.data.data) && payload.data.data.length > 0) return true;
+    if (payload.data && payload.data.review) return true;
+    if (payload._id || payload.id) return true;
+    return false;
+};
+
 // Fetch the EMPLOYEE review form (using employee URL)
 export const fetchEmployeeReviewForm = async (): Promise<any> => {
-    const apiKey = import.meta.env.VITE_EMPLOYEE_API_KEY;
+    const apiKey = getReviewFormApiKey('employee');
     const apiUrl = import.meta.env.VITE_REVIEW_FORM_API_URL;
     if (!apiKey || !apiUrl) { console.warn('Employee Review API key or URL is missing.'); return null; }
     try {
-        // Use Employee URL directly (no switch to manager)
-        const employeeUrl = apiUrl; // already contains /Employee or similar
+        const employeeUrl = apiUrl;
         const response = await fetch(`${employeeUrl}${employeeUrl.includes('?') ? '&' : '?'}t=${Date.now()}`, {
             method: 'GET',
             headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' }
@@ -155,12 +439,15 @@ export const fetchEmployeeReviewForm = async (): Promise<any> => {
         const data = await response.json();
         console.log('%c[FETCH] Employee Review Form fetched', 'color: green; font-weight: bold;', data);
         return data;
-    } catch (error) { console.error('Error fetching Employee Review Form:', error); return null; }
+    } catch (error) {
+        console.error('Error fetching Employee Review Form:', error);
+        return null;
+    }
 };
 
 // Fetch the MANAGER review form (using manager URL)
 export const fetchManagerReviewForm = async (): Promise<any> => {
-    const apiKey = import.meta.env.VITE_EMPLOYEE_API_KEY;
+    const apiKey = getReviewFormApiKey('manager');
     const managerApiUrl = import.meta.env.VITE_MANAGER_REVIEW_FORM_API_URL;
     if (!apiKey || !managerApiUrl) { console.warn('Manager Review API key or URL is missing.'); return null; }
     try {
@@ -172,7 +459,10 @@ export const fetchManagerReviewForm = async (): Promise<any> => {
         const data = await response.json();
         console.log('%c[FETCH] Manager Review Form fetched', 'color: blue; font-weight: bold;', data);
         return data;
-    } catch (error) { console.error('Error fetching Manager Review Form:', error); return null; }
+    } catch (error) {
+        console.error('Error fetching Manager Review Form:', error);
+        return null;
+    }
 };
 
 // Keep the old fetchReviewForm for backward compat (fetches manager view)
@@ -198,8 +488,44 @@ let lastReviewFetchTime = 0;
 export const getFreshReviewForm = async (force: boolean = false) => {
     const now = Date.now();
     if (!force && cachedReviewForm && (now - lastReviewFetchTime < 3000)) return cachedReviewForm;
-    const fresh = await fetchManagerReviewForm();
-    if (fresh) { cachedReviewForm = fresh; cachedManagerReviewForm = fresh; lastReviewFetchTime = now; lastManagerReviewFetchTime = now; }
+
+    if (useDummyReviewFallback) {
+        console.warn('%c[FETCH] Falling back to dummy review form because VITE_FALLBACK_DUMMY_REVIEW is enabled.', 'color: orange;');
+        const sourceOkrs = okrCache.length > 0 ? okrCache : await fetchEmployeeOKRs();
+        cachedReviewForm = buildDummyReviewFormResponse(sourceOkrs);
+        lastReviewFetchTime = now;
+        return cachedReviewForm;
+    }
+
+    let fresh = await fetchManagerReviewForm();
+    let source: 'manager' | 'employee' = 'manager';
+
+    if (!hasReviewData(fresh)) {
+        console.warn('%c[FETCH] Manager review form returned no valid data, falling back to employee review form.', 'color: orange;');
+        fresh = await fetchEmployeeReviewForm();
+        source = 'employee';
+    }
+
+    if (!hasReviewData(fresh)) {
+        console.warn('%c[FETCH] Both manager and employee review form fetch failed; using dummy fallback data.', 'color: orange;');
+        const sourceOkrs = okrCache.length > 0 ? okrCache : await fetchEmployeeOKRs();
+        fresh = buildDummyReviewFormResponse(sourceOkrs);
+        source = 'employee';
+    }
+
+    if (hasReviewData(fresh)) {
+        cachedReviewForm = fresh;
+        lastReviewFetchTime = now;
+
+        if (source === 'manager') {
+            cachedManagerReviewForm = fresh;
+            lastManagerReviewFetchTime = now;
+        } else {
+            cachedEmployeeReviewForm = fresh;
+            lastEmployeeReviewFetchTime = now;
+        }
+    }
+
     return cachedReviewForm;
 };
 
@@ -207,7 +533,10 @@ export const getFreshEmployeeReviewForm = async (force: boolean = false) => {
     const now = Date.now();
     if (!force && cachedEmployeeReviewForm && (now - lastEmployeeReviewFetchTime < 3000)) return cachedEmployeeReviewForm;
     const fresh = await fetchEmployeeReviewForm();
-    if (fresh) { cachedEmployeeReviewForm = fresh; lastEmployeeReviewFetchTime = now; }
+    if (hasReviewData(fresh)) {
+        cachedEmployeeReviewForm = fresh;
+        lastEmployeeReviewFetchTime = now;
+    }
     return cachedEmployeeReviewForm;
 };
 
@@ -215,7 +544,12 @@ export const getFreshManagerReviewForm = async (force: boolean = false) => {
     const now = Date.now();
     if (!force && cachedManagerReviewForm && (now - lastManagerReviewFetchTime < 3000)) return cachedManagerReviewForm;
     const fresh = await fetchManagerReviewForm();
-    if (fresh) { cachedManagerReviewForm = fresh; cachedReviewForm = fresh; lastManagerReviewFetchTime = now; lastReviewFetchTime = now; }
+    if (hasReviewData(fresh)) {
+        cachedManagerReviewForm = fresh;
+        cachedReviewForm = fresh;
+        lastManagerReviewFetchTime = now;
+        lastReviewFetchTime = now;
+    }
     return cachedManagerReviewForm;
 };
 
