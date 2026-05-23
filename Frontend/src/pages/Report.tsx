@@ -78,18 +78,6 @@ const Report = () => {
         return placeholders.includes(normalized);
     };
 
-    const isDummyGoal = (goal: any) => {
-        const objective = String(goal?.objective || goal?.okrName || goal?.title || goal?.name || goal?.goalName || '').trim().toLowerCase();
-        if (!objective) return true;
-        const dummyPatterns = [
-            'improve customer satisfaction',
-            'increase team collaboration',
-            'objective ',
-            'no objective title'
-        ];
-        return dummyPatterns.some(pattern => objective.startsWith(pattern) || objective === pattern);
-    };
-
     useEffect(() => {
         const loadData = async () => {
             console.log("%c[REPORT] Loading review data...", "color: cyan; font-weight: bold;");
@@ -132,11 +120,11 @@ const Report = () => {
 
                 if (reviewObj && sourceOkrs && sourceOkrs.length > 0) {
                     const existingGoals = reviewObj.goals || reviewObj.objectives || reviewObj.okrs || [];
-                    const needsCompleteObjectiveRefresh = existingGoals.length === 0 || existingGoals.every(isDummyGoal);
+                    const needsCompleteObjectiveRefresh = existingGoals.length === 0;
 
                     if (needsCompleteObjectiveRefresh) {
-                        // Case 1: No goals in review form yet, or data is clearly placeholder/demo values
-                        console.log("[REPORT] Review goals are empty or placeholder-only. Rebuilding from source OKRs.");
+                        // Case 1: No goals in review form yet
+                        console.log("[REPORT] Review goals are empty. Rebuilding from source OKRs.");
                         reviewObj.goals = sourceOkrs.map((o: any) => ({
                             _id: o._id || o.id,
                             objective: o.objective || o.title || o.name,
@@ -328,17 +316,21 @@ const Report = () => {
             };
         });
 
-        // Calculate Objective Progress as Average of KR progress
-        const avgProgress = krs.length > 0
-            ? krs.reduce((acc, kr) => acc + kr.progress, 0) / krs.length
-            : (goal.progressStatus || goal.progress || 0);
+        // Calculate Objective Progress as weighted KR progress by target when KR data is available
+        const totalTarget = krs.reduce((sum, kr) => sum + Number(kr.target || '0'), 0);
+        const totalActual = krs.reduce((sum, kr) => sum + Math.min(Number(kr.current || '0'), Number(kr.target || '0')), 0);
+        const weightedProgress = totalTarget > 0 ? (totalActual / totalTarget) * 100 : undefined;
+
+        // Use Objective Progress directly from the DB/API to prevent mismatch, fallback to calculated if falsy
+        const resolvedProgress = Number(goal.progressStatus || goal.progress) || 
+            (weightedProgress !== undefined ? Number(Math.min(100, Math.max(0, weightedProgress)).toFixed(2)) : 0);
 
         return {
             id: goal._id || goal.id || Math.random().toString(36).substr(2, 9),
             objective: goal.objective || goal.okrName || goal.title || goal.name || goal.goalName || 'No Objective Title',
             weight: goal.weight || 0,
             dueDate: goal.dueDate || '',
-            progress: Number(avgProgress.toFixed(2)),
+            progress: resolvedProgress,
             // Strictly check for numeric ratings
             employeeRating: !isNaN(parseFloat(goal.employeeRating)) ? Math.round(parseFloat(goal.employeeRating)) : 0,
             managerRating: !isNaN(parseFloat(goal.managerRating)) ? Math.round(parseFloat(goal.managerRating)) : 0,

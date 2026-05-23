@@ -38,36 +38,21 @@ export const getVapiMetadata = (okrs: OKR[], reviewData: any, employeeName?: str
   const reviewID = currentReview?._id || currentReview?.id || 'unknown';
 
   // Build OKR list string
-  const fallbackOkrs = [
-    {
-      id: 'dummy-okr-1',
-      objective: 'Develop Customer Success Team',
-      keyResults: [
-        {
-          id: 'dummy-kr-1',
-          description: 'Hire 10 employees into Customer Success Team by end of April',
-          target: '10',
-          current: '6'
-        }
-      ]
-    }
-  ];
-
-  const effectiveOkrs = (okrs && okrs.length > 0) ? okrs : fallbackOkrs;
   const okrLines: string[] = [];
-  effectiveOkrs.forEach((o) => {
-    const objTitle = o.objective || 'Untitled Objective';
-    okrLines.push(`- Objective: "${objTitle}" [INTERNAL ID: ${o.id}]`);
-    if (o.keyResults && o.keyResults.length > 0) {
-      o.keyResults.forEach((k) => {
-        okrLines.push(`  * Key Result: "${k.description}" [INTERNAL ID: ${k.id}] (TARGET: ${k.target}, CURRENT ACTUAL: ${k.current})`);
+  if (okrs && okrs.length > 0) {
+      okrs.forEach((o) => {
+        const objTitle = o.objective || 'Untitled Objective';
+        okrLines.push(`- Objective: "${objTitle}" [INTERNAL ID: ${o.id}]`);
+        if (o.keyResults && o.keyResults.length > 0) {
+          o.keyResults.forEach((k) => {
+            okrLines.push(`  * Key Result: "${k.description}" [INTERNAL ID: ${k.id}] (TARGET: ${k.target}, CURRENT ACTUAL: ${k.current})`);
+          });
+        } else {
+          okrLines.push('  * No key results');
+        }
       });
-    } else {
-      okrLines.push('  * No key results');
     }
-  });
-  const okrListString = okrLines.join('\n');
-
+    const okrListString = okrLines.join('\n');
   return {
     reviewID,
     employeeName: emp,
