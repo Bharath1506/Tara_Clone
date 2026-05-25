@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/tooltip"
 import { OKRTable } from '@/components/OKRTable';
 import { CompetencyTable } from '@/components/CompetencyTable';
-import { fetchEmployeeOKRs, getFreshReviewForm } from '@/services/okrService';
+import { fetchEmployeeOKRs, fetchEmployeeReviewForm } from '@/services/okrService';
 import logoImage from '@/assets/talentspotify-logo.png';
 
 // Scroll to section helper
@@ -82,8 +82,8 @@ const Report = () => {
         const loadData = async () => {
             console.log("%c[REPORT] Loading review data...", "color: cyan; font-weight: bold;");
             try {
-                const response = await getFreshReviewForm(true);
-                console.log("[REPORT] API Response received:", response);
+                const response = await fetchEmployeeReviewForm();
+                console.log("[REPORT] Employee review API response received:", response);
 
                 if (!response || !response.data) {
                     console.error("[REPORT] No data in API response");
@@ -94,6 +94,42 @@ const Report = () => {
                 // Handle both array and single object responses
                 let reviewList: any[] = [];
                 if (Array.isArray(response.data)) {
+                    const firstItem = response.data[0];
+                    const isOkrArray = firstItem && typeof firstItem === 'object' &&
+                        (firstItem.objective || firstItem.objectiveID || firstItem.okrPeriod || firstItem.owner || firstItem.employeeName);
+
+                    if (isOkrArray && !firstItem.goals && !firstItem.objectives && !firstItem.okrs) {
+                        console.log('[REPORT] Detected raw employee OKR array response. Building review object from OKRs.');
+                        const employeeInfo = firstItem.employeeName || firstItem.ownerName || firstItem.owner || '';
+                        const reviewObjFromOkr = {
+                            employeeFullName: employeeInfo,
+                            employeeName: employeeInfo,
+                            managerName: '',
+                            reviewCycle: firstItem.okrPeriod ? `${firstItem.okrPeriod} ${firstItem.okrYear || ''}`.trim() : undefined,
+                            createdAt: firstItem.updatedAt || firstItem.createdAt,
+                            goals: response.data.map((item: any) => ({
+                                _id: item._id || item.id || item.objectiveID || item.objective,
+                                objective: item.objective || item.title || item.name || item.goalName || '',
+                                weight: item.weight || item.employeeTotalWeight || 0,
+                                progressStatus: item.progressStatus || item.progress || 0,
+                                employeeRating: 0,
+                                managerRating: 0,
+                                children: (item.children || item.keyResults || []).map((kr: any) => ({
+                                    _id: kr._id || kr.krID || kr.id || kr.keyResultName,
+                                    keyResultName: kr.keyResultName || kr.okrName || kr.description || kr.title || kr.name || '',
+                                    targetValue: kr.target || kr.targetValue || 0,
+                                    actual: kr.actual || kr.current || 0,
+                                    unit: kr.unit || kr.uom || kr.metrics || '',
+                                    employeeRating: 0,
+                                    managerRating: 0
+                                }))
+                            }))
+                        };
+                        console.log('[REPORT] Employee report object constructed from API data:', reviewObjFromOkr);
+                        setReviewData(reviewObjFromOkr);
+                        setLoading(false);
+                        return;
+                    }
                     reviewList = response.data;
                 } else if (response.data.review) {
                     reviewList = [response.data.review];
@@ -111,6 +147,7 @@ const Report = () => {
                 });
 
                 let reviewObj = reviewList[0];
+
                 console.log("[REPORT] Selected Review Object ID:", reviewObj?._id || reviewObj?.id);
 
                 // --- LIVE PROGRESS SYNC ---
@@ -125,6 +162,13 @@ const Report = () => {
                     if (needsCompleteObjectiveRefresh) {
                         // Case 1: No goals in review form yet
                         console.log("[REPORT] Review goals are empty. Rebuilding from source OKRs.");
+                        const sourceMeta: any = sourceOkrs[0] || {};
+                        reviewObj.employeeFullName = reviewObj.employeeFullName || sourceMeta.employeeName || sourceMeta.ownerName || sourceMeta.owner || '';
+                        reviewObj.employeeName = reviewObj.employeeName || reviewObj.employeeFullName || sourceMeta.employeeName || sourceMeta.ownerName || sourceMeta.owner || '';
+                        reviewObj.reviewCycle = reviewObj.reviewCycle || (sourceMeta.okrPeriod ? `${sourceMeta.okrPeriod} ${sourceMeta.okrYear || ''}`.trim() : '');
+                        reviewObj.designation = reviewObj.designation || sourceMeta.designation || '';
+                        reviewObj.functionName = reviewObj.functionName || sourceMeta.functionName || '';
+
                         reviewObj.goals = sourceOkrs.map((o: any) => ({
                             _id: o._id || o.id,
                             objective: o.objective || o.title || o.name,
@@ -177,61 +221,6 @@ const Report = () => {
                         });
                     }
                     console.log("[REPORT] Progress sync complete.");
-                }
-
-                // --- IDENTITY RESOLUTION ---
-                // We resolve names by looking at: 
-                // 1. The Database Record
-                // 2. The Consent Form (state)
-                // 3. The API Key Identity (Token)
-                try {
-                    // Filter out "undefined" or placeholder names from the database
-                    const isDbNameValid = (name: string) => name && !name.toLowerCase().includes("undefined") && name.trim() !== "";
-
-                    const currentEmployeeName = reviewObj.employeeFullName || reviewObj.employeeName || reviewObj.name || '';
-                    if (isPlaceholderName(currentEmployeeName)) {
-                        if (stateEmployeeName) {
-                            console.log("[REPORT] Overriding placeholder employee name with state value:", stateEmployeeName);
-                            reviewObj.employeeFullName = stateEmployeeName;
-                        } else {
-                            const token = import.meta.env.VITE_EMPLOYEE_API_KEY;
-                            if (token) {
-                                try {
-                                    const payload = JSON.parse(atob(token.split('.')[1]));
-                                    if (payload.name && payload.name !== "Super Admin") {
-                                        reviewObj.employeeFullName = payload.name;
-                                    }
-                                } catch {
-                                    // Ignore invalid token format
-                                }
-                            }
-                        }
-                    } else {
-                        reviewObj.employeeFullName = currentEmployeeName;
-                    }
-
-                    // Use fallback name from route if the DB value is missing or still generic
-                    if (!reviewObj.employeeFullName || isPlaceholderName(reviewObj.employeeFullName)) {
-                        reviewObj.employeeFullName = stateEmployeeName || 'Ravi K';
-                    }
-
-                    // Resolve Manager name using placeholder filtering and route fallback
-                    const managerUrl = import.meta.env.VITE_MANAGER_REVIEW_FORM_API_URL || "";
-                    if (managerUrl.includes("68e49939df33a7c9177aaf03")) {
-                        console.log("[REPORT] Forcing Manager: Madhavi peddireddy");
-                        reviewObj.managerName = "Madhavi peddireddy";
-                    } else {
-                        const currentManagerName = reviewObj.managerName || reviewObj.manager || reviewObj.supervisorName || '';
-                        if (isPlaceholderName(currentManagerName)) {
-                            if (stateManagerName) {
-                                reviewObj.managerName = stateManagerName;
-                            }
-                        } else {
-                            reviewObj.managerName = currentManagerName;
-                        }
-                    }
-                } catch (e) {
-                    console.warn("[REPORT] Identity resolution failed", e);
                 }
 
                 console.log("[REPORT] Final Review Data for state:", reviewObj);
@@ -572,22 +561,12 @@ const Report = () => {
                                 Performance Review Report
                             </div>
                             <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">
-                                {reviewData.employeeFullName || 'Employee Name'}
+                                {reviewData.employeeFullName || reviewData.employeeName || reviewData.name || reviewData.employee || 'Employee Name'}
                             </h1>
                             <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
                                 <div className="flex items-center gap-2">
                                     <span className="font-semibold text-gray-700">Manager:</span>
-                                    {(() => {
-                                        const possibleNames = [
-                                            reviewData.managerName,
-                                            reviewData.managerFullName,
-                                            reviewData.reportingManager,
-                                            reviewData.reportingManagerName,
-                                            reviewData.manager?.name
-                                        ];
-                                        const validName = possibleNames.find(n => n && typeof n === 'string' && n.trim() !== '' && n.trim() !== 'Manager Name');
-                                        return validName || 'Manager Name';
-                                    })()}
+                                    {reviewData.managerName || reviewData.manager || reviewData.reportingManager || reviewData.reportingManagerName || reviewData.manager?.name || 'Manager Name'}
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <span className="font-semibold text-gray-700">Period:</span>

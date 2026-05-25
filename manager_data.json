@@ -1,0 +1,1564 @@
+{
+  "success": true,
+  "data": [
+    {
+      "overalComments": {},
+      "overallRating": 4,
+      "goals": [
+        {
+          "_id": "69c4cacb71526b6dad5cc12d",
+          "objective": "Develop Customer Success Team",
+          "weight": 30,
+          "progressStatus": 60,
+          "employeeRating": 0,
+          "managerRating": 4,
+          "children": [
+            {
+              "_id": "69c4cbce71526b6dad5cc140",
+              "keyResultName": "Hire 10 employees into Customer Success Team by end of April",
+              "target": "10",
+              "actual": 6,
+              "employeeRating": 0,
+              "managerRating": 0
+            }
+          ],
+          "manager_rating": 4,
+          "rating": 4,
+          "Rating": 4,
+          "score": 4,
+          "Feedback": 4,
+          "feedback": "Although the target was to hire 10 employees, Ravi successfully hired the majority and achieved 8. Employee turnover was beyond his control, hence I rated 4 out of 5.",
+          "comment": "Although the target was to hire 10 employees, Ravi successfully hired the majority and achieved 8. Employee turnover was beyond his control, hence I rated 4 out of 5.",
+          "reason": "Although the target was to hire 10 employees, Ravi successfully hired the majority and achieved 8. Employee turnover was beyond his control, hence I rated 4 out of 5.",
+          "employeeFeedback": "Although the target was to hire 10 employees, Ravi successfully hired the majority and achieved 8. Employee turnover was beyond his control, hence I rated 4 out of 5.",
+          "employee_feedback": "Although the target was to hire 10 employees, Ravi successfully hired the majority and achieved 8. Employee turnover was beyond his control, hence I rated 4 out of 5.",
+          "managerFeedback": "Although the target was to hire 10 employees, Ravi successfully hired the majority and achieved 8. Employee turnover was beyond his control, hence I rated 4 out of 5.",
+          "manager_feedback": "Although the target was to hire 10 employees, Ravi successfully hired the majority and achieved 8. Employee turnover was beyond his control, hence I rated 4 out of 5."
+        }
+      ],
+      "competencies": [
+        {
+          "competencyName": "Ownership & Accountability",
+          "title": "Ownership & Accountability",
+          "type": "employee",
+          "Feedback": 0,
+          "Comments": ""
+        },
+        {
+          "competencyName": "Ownership & Accountability",
+          "title": "Ownership & Accountability",
+          "type": "manager",
+          "Feedback": 4,
+          "Comments": "",
+          "feedback": 4,
+          "rating": 4,
+          "Rating": 4,
+          "score": 4,
+          "managerRating": 4,
+          "manager_rating": 4
+        },
+        {
+          "competencyName": "Professionalism",
+          "title": "Professionalism",
+          "type": "employee",
+          "Feedback": 0,
+          "Comments": ""
+        },
+        {
+          "competencyName": "Professionalism",
+          "title": "Professionalism",
+          "type": "manager",
+          "Feedback": 0,
+          "Comments": ""
+        },
+        {
+          "competencyName": "Customer Focus",
+          "title": "Customer Focus",
+          "type": "employee",
+          "Feedback": 0,
+          "Comments": ""
+        },
+        {
+          "competencyName": "Customer Focus",
+          "title": "Customer Focus",
+          "type": "manager",
+          "Feedback": 0,
+          "Comments": ""
+        },
+        {
+          "competencyName": "Leadership",
+          "title": "Leadership",
+          "type": "employee",
+          "Feedback": 0,
+          "Comments": ""
+        },
+        {
+          "competencyName": "Leadership",
+          "title": "Leadership",
+          "type": "manager",
+          "Feedback": 0,
+          "Comments": ""
+        },
+        {
+          "competencyName": "Collaboration",
+          "title": "Collaboration",
+          "type": "employee",
+          "Feedback": 0,
+          "Comments": ""
+        },
+        {
+          "competencyName": "Collaboration",
+          "title": "Collaboration",
+          "type": "manager",
+          "Feedback": 0,
+          "Comments": ""
+        }
+      ],
+      "status": "Submit",
+      "managerSubmissionDate": "2026-03-21T07:08:42.178Z",
+      "employeeSubmissionDate": "2026-03-21T07:08:42.178Z",
+      "managersRating": 4,
+      "_id": "69c3bee7b4602c087d3bd62c",
+      "employeeName": "68e49939df33a7c9177aaf03",
+      "employeeId": "68e49939df33a7c9177aaf03",
+      "employeeFullName": "Madhavi peddireddy",
+      "employeeRole": "Manager",
+      "reviewPeriod": "2026-03-25",
+      "totalAchievement": "18",
+      "startDate": "2026-03-25",
+      "endDate": "2026-03-31",
+      "managerId": "68e2419abde815a5ba999ad9",
+      "managerName": "Madhavi peddireddy",
+      "attachment": "",
+      "templateName": "TestReviews",
+      "templateId": "69c3b6fab4602c087d3bd139",
+      "companyId": "6396f7d703546500086f0200",
+      "formId": "REVIEW_FORM_4768543",
+      "__v": 0,
+      "createdAt": "2026-03-25T10:54:31.228Z",
+      "updatedAt": "2026-05-24T15:15:46.806Z",
+      "employeesRating": "0.00",
+      "averageRating": "1.00",
+      "reviewPeriodStartDate": "2026-03-25",
+      "reviewPeriodEndDate": "2026-03-31"
+    },
+    {
+      "overalComments": {},
+      "overallRating": "0.00",
+      "goals": [],
+      "competencies": [],
+      "status": "Submit",
+      "managerSubmissionDate": "2026-03-21T07:08:42.178Z",
+      "employeeSubmissionDate": "2026-03-21T07:08:42.178Z",
+      "managersRating": "0.00",
+      "_id": "69c3bee7b4602c087d3bd629",
+      "employeeName": "697198a86ee166be4334220b",
+      "employeeId": "697198a86ee166be4334220b",
+      "employeeFullName": "Sania Tazeen",
+      "employeeRole": "Employee",
+      "reviewPeriod": "2026-03-25",
+      "totalAchievement": "0",
+      "startDate": "2026-03-25",
+      "endDate": "2026-03-31",
+      "managerId": "68e49939df33a7c9177aaf03",
+      "managerName": "",
+      "attachment": "",
+      "templateName": "TestReviews",
+      "templateId": "69c3b6fab4602c087d3bd139",
+      "companyId": "6396f7d703546500086f0200",
+      "formId": "REVIEW_FORM_1181453",
+      "__v": 0,
+      "createdAt": "2026-03-25T10:54:31.227Z",
+      "updatedAt": "2026-03-25T10:54:31.227Z",
+      "employeesRating": "0.00",
+      "averageRating": "0.00",
+      "reviewPeriodStartDate": "2026-03-25",
+      "reviewPeriodEndDate": "2026-03-31"
+    },
+    {
+      "overalComments": {},
+      "overallRating": "0.00",
+      "goals": [],
+      "competencies": [],
+      "status": "Submit",
+      "managerSubmissionDate": "2026-03-21T07:08:42.178Z",
+      "employeeSubmissionDate": "2026-03-21T07:08:42.178Z",
+      "managersRating": "0.00",
+      "_id": "69c3bee7b4602c087d3bd628",
+      "employeeName": "697199ec6ee166be4334221e",
+      "employeeId": "697199ec6ee166be4334221e",
+      "employeeFullName": "Nandini Clament",
+      "employeeRole": "Employee",
+      "reviewPeriod": "2026-03-25",
+      "totalAchievement": "0",
+      "startDate": "2026-03-25",
+      "endDate": "2026-03-31",
+      "managerId": "68e49939df33a7c9177aaf03",
+      "managerName": "",
+      "attachment": "",
+      "templateName": "TestReviews",
+      "templateId": "69c3b6fab4602c087d3bd139",
+      "companyId": "6396f7d703546500086f0200",
+      "formId": "REVIEW_FORM_2921549",
+      "__v": 0,
+      "createdAt": "2026-03-25T10:54:31.227Z",
+      "updatedAt": "2026-03-25T10:54:31.227Z",
+      "employeesRating": "0.00",
+      "averageRating": "0.00",
+      "reviewPeriodStartDate": "2026-03-25",
+      "reviewPeriodEndDate": "2026-03-31"
+    },
+    {
+      "overalComments": {},
+      "overallRating": "0.00",
+      "goals": [],
+      "competencies": [],
+      "status": "Submit",
+      "managerSubmissionDate": "2026-03-21T07:08:42.178Z",
+      "employeeSubmissionDate": "2026-03-21T07:08:42.178Z",
+      "managersRating": "0.00",
+      "_id": "69c3bee7b4602c087d3bd621",
+      "employeeName": "6971a5a96ee166be4334231e",
+      "employeeId": "6971a5a96ee166be4334231e",
+      "employeeFullName": "Bharath 1",
+      "employeeRole": "Intern",
+      "reviewPeriod": "2026-03-25",
+      "totalAchievement": "0",
+      "startDate": "2026-03-25",
+      "endDate": "2026-03-31",
+      "managerId": "68e49939df33a7c9177aaf03",
+      "managerName": "",
+      "attachment": "",
+      "templateName": "TestReviews",
+      "templateId": "69c3b6fab4602c087d3bd139",
+      "companyId": "6396f7d703546500086f0200",
+      "formId": "REVIEW_FORM_7799586",
+      "__v": 0,
+      "createdAt": "2026-03-25T10:54:31.227Z",
+      "updatedAt": "2026-03-25T10:54:31.227Z",
+      "employeesRating": "0.00",
+      "averageRating": "0.00",
+      "reviewPeriodStartDate": "2026-03-25",
+      "reviewPeriodEndDate": "2026-03-31"
+    },
+    {
+      "overalComments": {
+        "cm1": "test",
+        "cm2": "test",
+        "cm3": "test"
+      },
+      "overallRating": 4.5,
+      "goals": [
+        {
+          "id": 1,
+          "_id": "69b8e6c72a0af22890f90389",
+          "employeeName": "Mahesh 1",
+          "okrPeriod": "Q1",
+          "okrYear": 2026,
+          "objective": "Enhance Product Road Map",
+          "dueDate": "30 Jun 2026",
+          "weight": 50,
+          "rewardPoints": 0,
+          "owner": "69608fbabdad59735985f716",
+          "profilePicture": "https://www.clipartmax.com/png/middle/103-1038880_user-rubber-stamp-female-user-icon.png",
+          "progressStatus": 75,
+          "feedAttachment": "",
+          "comments": "",
+          "employeeReferenceId": "69608fbabdad59735985f716",
+          "updatedAt": "2026-03-17T05:29:43.478Z",
+          "children": [
+            {
+              "_id": "69b8e6c72a0af22890f9038c",
+              "isGifShown": true,
+              "isAlignedToCompany": "Yes",
+              "approvalRequired": false,
+              "pending": null,
+              "comments": "",
+              "okrName": "Hire 10 employees in a month",
+              "dimension": "",
+              "keyResultName": "Hire 10 employees in a month",
+              "polarity": "positive",
+              "msc": "",
+              "targetDate": "2026-03-31T00:00:00.000Z",
+              "actualDate": null,
+              "target": "20",
+              "actual": "10",
+              "feedAttachment": "",
+              "objectiveId": "69b8e6c72a0af22890f90389",
+              "krID": "KR_2524498",
+              "userId": "68e49939df33a7c9177aaf03",
+              "source": "",
+              "kpiId": "",
+              "query": "",
+              "kpiName": "",
+              "status": "inProgress",
+              "unit": "number",
+              "createdAt": "2026-03-06T08:52:15.190Z",
+              "updatedAt": "2026-03-06T09:46:13.405Z",
+              "__v": 0,
+              "basevalue": null,
+              "frequency": null,
+              "uom": null,
+              "isApproved": "approved",
+              "cascadeAssigneeType": "function",
+              "percent": 50,
+              "owner": "Mahesh 1",
+              "ownerName": "Mahesh 1",
+              "functionName": "Engineering",
+              "designation": "Lead Full Stack Developer",
+              "profilePicture": "",
+              "rewardPoints": 0,
+              "objective": "Hire 10 employees in a month",
+              "children": [],
+              "id": 1,
+              "dueDate": "31 Mar 2026",
+              "weight": 50
+            },
+            {
+              "_id": "69b8e6c72a0af22890f9038d",
+              "isGifShown": true,
+              "isAlignedToCompany": "Yes",
+              "approvalRequired": false,
+              "pending": null,
+              "comments": "",
+              "okrName": "Create new Product Features X number",
+              "dimension": "",
+              "keyResultName": "Create new Product Features X number",
+              "polarity": "positive",
+              "msc": "",
+              "targetDate": "2026-06-30T00:00:00.000Z",
+              "actualDate": null,
+              "target": "5",
+              "actual": "10",
+              "feedAttachment": "",
+              "objectiveId": "69b8e6c72a0af22890f90389",
+              "krID": "KR_8593429",
+              "userId": "68e49939df33a7c9177aaf03",
+              "source": "",
+              "kpiId": "",
+              "query": "",
+              "kpiName": "",
+              "status": "inProgress",
+              "unit": "number",
+              "createdAt": "2026-03-05T05:19:06.083Z",
+              "updatedAt": "2026-03-16T10:05:00.072Z",
+              "__v": 0,
+              "basevalue": null,
+              "companyId": "6396f7d703546500086f0200",
+              "frequency": null,
+              "jiraKey": "",
+              "jiraStatus": "",
+              "uom": null,
+              "isApproved": "approved",
+              "cascadeAssigneeType": "function",
+              "percent": 100,
+              "owner": "Mahesh 1",
+              "ownerName": "Mahesh 1",
+              "functionName": "Engineering",
+              "designation": "Lead Full Stack Developer",
+              "profilePicture": "",
+              "rewardPoints": 10,
+              "objective": "Create new Product Features X number",
+              "children": [],
+              "id": 2,
+              "dueDate": "30 Jun 2026",
+              "weight": 100
+            }
+          ],
+          "cascaded": true,
+          "dimension": "",
+          "employeeRating": 5,
+          "managerRating": 4
+        },
+        {
+          "id": 2,
+          "_id": "69a66e8c3381358780d4b3f6",
+          "employeeName": "Mahesh 1",
+          "okrPeriod": "Q1",
+          "okrYear": 2026,
+          "objective": "Increase Sales",
+          "dueDate": "Invalid date",
+          "weight": 30,
+          "rewardPoints": 0,
+          "owner": "69608fbabdad59735985f716",
+          "profilePicture": "https://www.clipartmax.com/png/middle/103-1038880_user-rubber-stamp-female-user-icon.png",
+          "progressStatus": 62.5,
+          "feedAttachment": "",
+          "comments": "",
+          "employeeReferenceId": "69608fbabdad59735985f716",
+          "updatedAt": "2026-03-03T05:15:56.134Z",
+          "children": [
+            {
+              "_id": "69a66e8c3381358780d4b3fb",
+              "isGifShown": false,
+              "isAlignedToCompany": "Yes",
+              "approvalRequired": false,
+              "pending": null,
+              "comments": "",
+              "okrName": "increase number of lead to opportunity to 40 per month",
+              "dimension": "",
+              "keyResultName": "increase number of lead to opportunity to 40 per month",
+              "polarity": "positive",
+              "msc": "",
+              "targetDate": "2026-03-31T00:00:00.000Z",
+              "actualDate": null,
+              "target": "40",
+              "actual": "10",
+              "feedAttachment": "",
+              "objectiveId": "69a66e8c3381358780d4b3f6",
+              "krID": "KR_5817333",
+              "userId": "68e49939df33a7c9177aaf03",
+              "source": "",
+              "kpiId": "",
+              "query": "",
+              "kpiName": "",
+              "status": "inProgress",
+              "unit": "number",
+              "createdAt": "2026-03-03T05:03:36.331Z",
+              "updatedAt": "2026-03-03T05:04:15.056Z",
+              "__v": 0,
+              "basevalue": null,
+              "frequency": null,
+              "uom": null,
+              "percent": 25,
+              "owner": "Mahesh 1",
+              "ownerName": "Mahesh 1",
+              "functionName": "Engineering",
+              "designation": "Lead Full Stack Developer",
+              "profilePicture": "",
+              "rewardPoints": 0,
+              "objective": "increase number of lead to opportunity to 40 per month",
+              "children": [],
+              "id": 1,
+              "dueDate": "31 Mar 2026",
+              "weight": 25
+            },
+            {
+              "_id": "69a66e8c3381358780d4b3fc",
+              "isGifShown": true,
+              "isAlignedToCompany": "Yes",
+              "approvalRequired": false,
+              "pending": null,
+              "comments": "",
+              "okrName": "Generate 100 leads per month",
+              "dimension": "",
+              "keyResultName": "Generate 100 leads per month",
+              "polarity": "positive",
+              "msc": "",
+              "targetDate": "2026-02-28T00:00:00.000Z",
+              "actualDate": null,
+              "target": "100",
+              "actual": "100",
+              "feedAttachment": "",
+              "objectiveId": "69a66e8c3381358780d4b3f6",
+              "krID": "KR_3714956",
+              "userId": "68e49939df33a7c9177aaf03",
+              "source": "",
+              "kpiId": "",
+              "query": "",
+              "kpiName": "",
+              "status": "inProgress",
+              "unit": "number",
+              "createdAt": "2026-02-27T09:16:53.321Z",
+              "updatedAt": "2026-02-27T09:43:43.992Z",
+              "__v": 0,
+              "basevalue": null,
+              "frequency": null,
+              "uom": null,
+              "isApproved": "approved",
+              "percent": 100,
+              "owner": "Mahesh 1",
+              "ownerName": "Mahesh 1",
+              "functionName": "Engineering",
+              "designation": "Lead Full Stack Developer",
+              "profilePicture": "",
+              "rewardPoints": 6,
+              "objective": "Generate 100 leads per month",
+              "children": [],
+              "id": 2,
+              "dueDate": "28 Feb 2026",
+              "weight": 100
+            }
+          ],
+          "cascaded": true,
+          "dimension": "",
+          "employeeRating": 5,
+          "managerRating": 4
+        },
+        {
+          "id": 3,
+          "_id": "699eb709bd61cd6c10fd8d89",
+          "employeeName": "Mahesh 1",
+          "okrPeriod": "Q1",
+          "okrYear": 2026,
+          "objective": "Increase our customer penetration by Q2",
+          "dueDate": "1 Jan 1970",
+          "weight": 80,
+          "rewardPoints": 0,
+          "owner": "Mahesh 1",
+          "profilePicture": "",
+          "progressStatus": 0,
+          "feedAttachment": "",
+          "comments": "",
+          "employeeReferenceId": "69608fbabdad59735985f716",
+          "updatedAt": "2026-02-25T08:51:35.266Z",
+          "children": [
+            {
+              "_id": "699eb709bd61cd6c10fd8d8b",
+              "isGifShown": false,
+              "isAlignedToCompany": "No",
+              "approvalRequired": false,
+              "pending": null,
+              "okrName": "Increase our customer penetration by Q2",
+              "dimension": "Operational",
+              "keyResultName": "Increase the distribution channel to X number by Q2",
+              "target": "",
+              "actual": 0,
+              "basevalue": 0,
+              "objectiveId": "699eb709bd61cd6c10fd8d89",
+              "polarity": "Positive",
+              "krID": "KR_4126157",
+              "__v": 0,
+              "createdAt": "2026-02-25T08:47:05.609Z",
+              "updatedAt": "2026-02-25T08:47:05.609Z",
+              "percent": 0,
+              "owner": "Mahesh 1",
+              "ownerName": "Mahesh 1",
+              "functionName": "Engineering",
+              "designation": "Lead Full Stack Developer",
+              "profilePicture": "",
+              "rewardPoints": 0,
+              "objective": "Increase the distribution channel to X number by Q2",
+              "children": [],
+              "id": 1,
+              "dueDate": "25 Mar 2026",
+              "weight": 0
+            },
+            {
+              "_id": "699eb709bd61cd6c10fd8d8c",
+              "isGifShown": false,
+              "isAlignedToCompany": "No",
+              "approvalRequired": false,
+              "pending": null,
+              "okrName": "Increase our customer penetration by Q2",
+              "dimension": "Operational",
+              "keyResultName": "X number of new states per quarter",
+              "target": "",
+              "actual": 0,
+              "basevalue": 0,
+              "objectiveId": "699eb709bd61cd6c10fd8d89",
+              "polarity": "Positive",
+              "krID": "KR_5399525",
+              "__v": 0,
+              "createdAt": "2026-02-25T08:47:05.610Z",
+              "updatedAt": "2026-02-25T08:47:05.610Z",
+              "percent": 0,
+              "owner": "Mahesh 1",
+              "ownerName": "Mahesh 1",
+              "functionName": "Engineering",
+              "designation": "Lead Full Stack Developer",
+              "profilePicture": "",
+              "rewardPoints": 0,
+              "objective": "X number of new states per quarter",
+              "children": [],
+              "id": 2,
+              "dueDate": "25 Mar 2026",
+              "weight": 0
+            }
+          ],
+          "cascaded": false,
+          "dimension": "Operational",
+          "objectiveStatus": "Create",
+          "employeeRating": 5,
+          "managerRating": 4
+        },
+        {
+          "id": 4,
+          "_id": "699eb6d8bd61cd6c10fd8cbc",
+          "employeeName": "Mahesh 1",
+          "okrPeriod": "Q1",
+          "okrYear": 2026,
+          "objective": "Awesome customer support experience",
+          "dueDate": "1 Jan 1970",
+          "weight": 20,
+          "rewardPoints": 8,
+          "owner": "69608fbabdad59735985f716",
+          "profilePicture": "https://www.clipartmax.com/png/middle/103-1038880_user-rubber-stamp-female-user-icon.png",
+          "progressStatus": 100,
+          "feedAttachment": "",
+          "comments": "",
+          "employeeReferenceId": "69608fbabdad59735985f716",
+          "updatedAt": "2026-02-25T08:50:54.174Z",
+          "children": [
+            {
+              "_id": "699eb6d8bd61cd6c10fd8cc0",
+              "isGifShown": true,
+              "isAlignedToCompany": "Yes",
+              "approvalRequired": false,
+              "pending": null,
+              "okrName": "Increase tickets resolved per employee per day from 50 to 70",
+              "dimension": "",
+              "keyResultName": "Increase tickets resolved per employee per day from 50 to 70",
+              "target": "70",
+              "actual": "70",
+              "basevalue": null,
+              "objectiveId": "699eb6d8bd61cd6c10fd8cbc",
+              "polarity": "positive",
+              "krID": "KR_9468672",
+              "__v": 0,
+              "createdAt": "2026-02-23T08:12:43.731Z",
+              "updatedAt": "2026-02-25T08:45:07.753Z",
+              "actualDate": null,
+              "comments": "",
+              "feedAttachment": "",
+              "frequency": null,
+              "kpiId": "",
+              "kpiName": "",
+              "msc": "",
+              "query": "",
+              "source": "",
+              "status": "inProgress",
+              "targetDate": "2026-03-31T00:00:00.000Z",
+              "unit": "number",
+              "uom": null,
+              "userId": "68e49939df33a7c9177aaf03",
+              "isApproved": "approved",
+              "percent": 100,
+              "owner": "Mahesh 1",
+              "ownerName": "Mahesh 1",
+              "functionName": "Engineering",
+              "designation": "Lead Full Stack Developer",
+              "profilePicture": "",
+              "rewardPoints": 4,
+              "objective": "Increase tickets resolved per employee per day from 50 to 70",
+              "children": [
+                {
+                  "id": 1,
+                  "assignTo": [
+                    "69608fbabdad59735985f716",
+                    "69667a084969eabf3da9d459"
+                  ],
+                  "rewardPoints": 0,
+                  "recurrence": false,
+                  "recurrenceDetails": null,
+                  "mainTask": null,
+                  "progressStatus": 0,
+                  "pending": null,
+                  "_id": "699eb755bd61cd6c10fd8ddf",
+                  "title": "add another resource",
+                  "description": "resource",
+                  "startDate": "2026-02-23T00:00:00.000Z",
+                  "dueDate": "2026-02-27T00:00:00.000Z",
+                  "actualCompletionDate": null,
+                  "priority": "High Level",
+                  "comments": "",
+                  "attachments": "",
+                  "krReferenceId": "699eb6d8bd61cd6c10fd8cc0",
+                  "status": "notstarted",
+                  "companyId": "6396f7d703546500086f0200",
+                  "userId": "69608fbabdad59735985f716",
+                  "__v": 0,
+                  "createdAt": "2026-02-25T08:48:21.230Z",
+                  "updatedAt": "2026-02-25T08:48:21.230Z",
+                  "assignee": [
+                    "Mahesh 1",
+                    "Guru sai"
+                  ],
+                  "userName": "Mahesh 1",
+                  "functionName": "Engineering",
+                  "designation": "Lead Full Stack Developer",
+                  "profilePicture": "",
+                  "objective": "add another resource"
+                }
+              ],
+              "id": 1,
+              "dueDate": "31 Mar 2026",
+              "weight": 100
+            }
+          ],
+          "cascaded": true,
+          "dimension": "Operational",
+          "objectiveStatus": "Create",
+          "employeeRating": 5,
+          "managerRating": 4
+        }
+      ],
+      "competencies": [
+        {
+          "developmentActivities": [
+            "yes"
+          ],
+          "coachingActivities": [
+            "coach"
+          ],
+          "designation": [
+            {
+              "key": "Test1",
+              "value": "Test1",
+              "label": "Test1 - Yasasree Viroha Impex Pvt Ltd"
+            },
+            {
+              "key": "Senior Manager - Patnerships",
+              "value": "Senior Manager - Patnerships",
+              "label": "Senior Manager - Patnerships"
+            },
+            {
+              "key": "Chief Executive Officer",
+              "value": "Chief Executive Officer",
+              "label": "Chief Executive Officer"
+            },
+            {
+              "key": "Chief Functionary",
+              "value": "Chief Functionary",
+              "label": "Chief Functionary"
+            },
+            {
+              "key": "Salesforce Developer",
+              "value": "Salesforce Developer",
+              "label": "Salesforce Developer"
+            },
+            {
+              "key": "Data Science - Intern",
+              "value": "Data Science - Intern",
+              "label": "Data Science - Intern"
+            },
+            {
+              "key": "Behaviour Science - Intern",
+              "value": "Behaviour Science - Intern",
+              "label": "Behaviour Science - Intern"
+            },
+            {
+              "key": "Lead Full Stack Developer",
+              "value": "Lead Full Stack Developer",
+              "label": "Lead Full Stack Developer"
+            },
+            {
+              "key": "Full Stack Developer Intern",
+              "value": "Full Stack Developer Intern",
+              "label": "Full Stack Developer Intern"
+            },
+            {
+              "key": "NodeJS Developer",
+              "value": "NodeJS Developer",
+              "label": "NodeJS Developer"
+            },
+            {
+              "key": "React Developer",
+              "value": "React Developer",
+              "label": "React Developer"
+            },
+            {
+              "key": "Java Developer",
+              "value": "Java Developer",
+              "label": "Java Developer"
+            }
+          ],
+          "_id": "6950091362e7f7764678abd6",
+          "competencyName": "New Test dec27",
+          "companyId": "6396f7d703546500086f0200",
+          "description": "Added new competenties",
+          "startDate": "2025-12-26",
+          "endDate": "2026-04-25",
+          "competencyType": "tester",
+          "categoryActivities": "categories ",
+          "createdAt": "2025-12-27T16:28:03.753Z",
+          "updatedAt": "2025-12-27T16:28:03.753Z",
+          "__v": 0,
+          "Feedback": 5,
+          "Comments": "test",
+          "type": "employee"
+        },
+        {
+          "competencyName": "New Test dec27",
+          "_id": "6950091362e7f7764678abd6",
+          "Feedback": 5,
+          "Comments": "",
+          "type": "manager",
+          "startDate": "2025-12-26",
+          "endDate": "2026-04-25"
+        }
+      ],
+      "status": "Completed",
+      "managerSubmissionDate": "2026-03-21T07:08:42.178Z",
+      "employeeSubmissionDate": "2026-03-21T07:08:42.178Z",
+      "managersRating": "7.20",
+      "_id": "69c3bee7b4602c087d3bd619",
+      "employeeName": "69608fbabdad59735985f716",
+      "employeeId": "69608fbabdad59735985f716",
+      "employeeFullName": "Mahesh 1",
+      "employeeRole": "Employee",
+      "reviewPeriod": "2026-03-25",
+      "totalAchievement": "76.25",
+      "startDate": "2026-03-25",
+      "endDate": "2026-03-31",
+      "managerId": "68e49939df33a7c9177aaf03",
+      "managerName": "Madhavi peddireddy",
+      "attachment": "",
+      "templateName": "TestReviews",
+      "templateId": "69c3b6fab4602c087d3bd139",
+      "companyId": "6396f7d703546500086f0200",
+      "formId": "REVIEW_FORM_9767654",
+      "__v": 0,
+      "createdAt": "2026-03-25T10:54:31.226Z",
+      "updatedAt": "2026-03-25T11:07:19.348Z",
+      "employeesRating": "9.00",
+      "averageRating": "6.10",
+      "reviewPeriodStartDate": "2026-03-25",
+      "reviewPeriodEndDate": "2026-03-31"
+    },
+    {
+      "overalComments": {
+        "cm1": "In the last quarter, I collaborated with cross-functional teams to ensure timely completion of tasks. I also adopted a customer-centric approach by actively collecting feedback and implementing improvements based on customer needs. Additionally, I successfully handled a critical escalation, ensuring it was resolved effectively and maintained customer satisfaction",
+        "cm2": "I want to concentrate on the areas where I am lacking and will work on them after report generation.",
+        "cm3": "Demonstrates a strong sense of ownership, collaboration, and customer focus. Effectively manages responsibilities, including handling escalations and working with cross-functional teams. Shows good potential for growth, especially in leadership and continuous improvement. With increased focus on skill enhancement and addressing improvement areas, can take on more challenging responsibilities in the upcoming quarters."
+      },
+      "overallRating": 3,
+      "goals": [
+        {
+          "id": 1,
+          "_id": "69c4cacb71526b6dad5cc12d",
+          "employeeName": "Ravi K",
+          "okrPeriod": "Q1",
+          "okrYear": 2026,
+          "objective": "Develop Customer Success Team",
+          "dueDate": "30 Apr 2026",
+          "weight": 30,
+          "rewardPoints": 0,
+          "owner": "Ravi K",
+          "profilePicture": "",
+          "progressStatus": 60,
+          "feedAttachment": "",
+          "comments": "testing",
+          "employeeReferenceId": "68e240b0d9876d59139672d6",
+          "updatedAt": "2026-03-27T13:31:02.114Z",
+          "children": [
+            {
+              "_id": "69c4cbce71526b6dad5cc140",
+              "isGifShown": false,
+              "isAlignedToCompany": "No",
+              "approvalRequired": false,
+              "pending": null,
+              "comments": "",
+              "okrName": "Hire 10 employees into Customer Success Team by end of April",
+              "dimension": "",
+              "keyResultName": "Hire 10 employees into Customer Success Team by end of April",
+              "polarity": "positive",
+              "msc": "",
+              "targetDate": "2026-04-30T00:00:00.000Z",
+              "actualDate": "2026-04-30T00:00:00.000Z",
+              "target": "10",
+              "actual": 6,
+              "feedAttachment": "",
+              "objectiveId": "69c4cacb71526b6dad5cc12d",
+              "krID": "KR_8357348",
+              "userId": "68e240b0d9876d59139672d6",
+              "source": "",
+              "kpiId": "",
+              "query": "",
+              "kpiName": "",
+              "status": "inProgress",
+              "unit": "number",
+              "jiraKey": "",
+              "jiraStatus": "",
+              "companyId": "6396f7d703546500086f0200",
+              "createdAt": "2026-03-26T06:01:50.488Z",
+              "updatedAt": "2026-03-27T13:31:59.259Z",
+              "__v": 0,
+              "basevalue": null,
+              "frequency": null,
+              "uom": null,
+              "percent": 60,
+              "owner": "Ravi K",
+              "ownerName": "Ravi K",
+              "functionName": "Data Science",
+              "designation": "Data Science - Intern",
+              "profilePicture": "",
+              "rewardPoints": 0,
+              "objective": "Hire 10 employees into Customer Success Team by end of April",
+              "children": [
+                {
+                  "id": 1,
+                  "assignTo": [
+                    "68e240b0d9876d59139672d6"
+                  ],
+                  "rewardPoints": 0,
+                  "recurrence": false,
+                  "recurrenceDetails": null,
+                  "mainTask": null,
+                  "progressStatus": 0,
+                  "pending": null,
+                  "_id": "69c4ceb271526b6dad5cc1da",
+                  "title": "testing task",
+                  "description": "testing task",
+                  "startDate": "2026-03-26T00:00:00.000Z",
+                  "dueDate": "2026-04-30T00:00:00.000Z",
+                  "actualCompletionDate": null,
+                  "priority": "Low Level",
+                  "comments": "",
+                  "attachments": "",
+                  "krReferenceId": "69c4cbce71526b6dad5cc140",
+                  "status": "notstarted",
+                  "companyId": "6396f7d703546500086f0200",
+                  "userId": "68e240b0d9876d59139672d6",
+                  "jiraKey": "",
+                  "jiraStatus": "",
+                  "__v": 0,
+                  "createdAt": "2026-03-26T06:14:10.441Z",
+                  "updatedAt": "2026-03-26T06:14:10.441Z",
+                  "assignee": [
+                    "Ravi K"
+                  ],
+                  "userName": "Ravi K",
+                  "functionName": "Data Science",
+                  "designation": "Data Science - Intern",
+                  "profilePicture": "",
+                  "objective": "testing task"
+                }
+              ],
+              "id": 1,
+              "dueDate": "30 Apr 2026",
+              "weight": 60
+            }
+          ],
+          "cascaded": false,
+          "dimension": "",
+          "objectiveStatus": "Create",
+          "employeeRating": 3,
+          "managerRating": 3,
+          "employee_rating": 3,
+          "rating": 3,
+          "Rating": 3,
+          "score": 3,
+          "feedback": "We were supposed to hire 10 employees by the end of April. Although we hired a few, some left, resulting in a net of 6 hires. Hence, I rated it 3 out of 5.",
+          "comment": "We were supposed to hire 10 employees by the end of April. Although we hired a few, some left, resulting in a net of 6 hires. Hence, I rated it 3 out of 5.",
+          "reason": "We were supposed to hire 10 employees by the end of April. Although we hired a few, some left, resulting in a net of 6 hires. Hence, I rated it 3 out of 5.",
+          "employeeFeedback": "We were supposed to hire 10 employees by the end of April. Although we hired a few, some left, resulting in a net of 6 hires. Hence, I rated it 3 out of 5.",
+          "employee_feedback": "We were supposed to hire 10 employees by the end of April. Although we hired a few, some left, resulting in a net of 6 hires. Hence, I rated it 3 out of 5."
+        }
+      ],
+      "competencies": [
+        {
+          "developmentActivities": [
+            "."
+          ],
+          "coachingActivities": [
+            "."
+          ],
+          "designation": [
+            {
+              "value": "Test1",
+              "label": "Test1",
+              "key": "Test1"
+            },
+            {
+              "value": "Senior Manager - Patnerships",
+              "label": "Senior Manager - Patnerships",
+              "key": "Senior Manager - Patnerships"
+            },
+            {
+              "value": "Chief Executive Officer",
+              "label": "Chief Executive Officer",
+              "key": "Chief Executive Officer"
+            },
+            {
+              "value": "Chief Functionary",
+              "label": "Chief Functionary",
+              "key": "Chief Functionary"
+            },
+            {
+              "value": "Salesforce Developer",
+              "label": "Salesforce Developer",
+              "key": "Salesforce Developer"
+            },
+            {
+              "value": "Data Science - Intern",
+              "label": "Data Science - Intern",
+              "key": "Data Science - Intern"
+            },
+            {
+              "value": "Behaviour Science - Intern",
+              "label": "Behaviour Science - Intern",
+              "key": "Behaviour Science - Intern"
+            },
+            {
+              "value": "Lead Full Stack Developer",
+              "label": "Lead Full Stack Developer",
+              "key": "Lead Full Stack Developer"
+            },
+            {
+              "value": "Full Stack Developer Intern",
+              "label": "Full Stack Developer Intern",
+              "key": "Full Stack Developer Intern"
+            },
+            {
+              "value": "Java Developer",
+              "label": "Java Developer",
+              "key": "Java Developer"
+            },
+            {
+              "value": "NodeJS Developer",
+              "label": "NodeJS Developer",
+              "key": "NodeJS Developer"
+            },
+            {
+              "value": "React Developer",
+              "label": "React Developer",
+              "key": "React Developer"
+            },
+            {
+              "value": "Java Developer",
+              "label": "Java Developer",
+              "key": "Java Developer"
+            },
+            {
+              "value": "NodeJS Developer",
+              "label": "NodeJS Developer",
+              "key": "NodeJS Developer"
+            },
+            {
+              "value": "React Developer",
+              "label": "React Developer",
+              "key": "React Developer"
+            },
+            {
+              "key": "Data Scientist",
+              "value": "Data Scientist",
+              "label": "Data Scientist - Talentspotify Private Limited"
+            }
+          ],
+          "_id": "68e3a703247aa2bffbd13c6d",
+          "competencyName": "Ownership & Accountability",
+          "companyId": "6396f7d703546500086f0200",
+          "description": "Ownership & Accountability",
+          "startDate": "2025-10-01",
+          "endDate": "2030-01-01",
+          "competencyType": "Behavioural",
+          "categoryActivities": ".",
+          "createdAt": "2025-10-06T11:24:51.614Z",
+          "updatedAt": "2026-02-13T06:27:22.259Z",
+          "__v": 0,
+          "Feedback": 3,
+          "Comments": "Delivered a project with full accountability, but a couple of escalations reached the manager directly, which should have been handled better.",
+          "type": "employee",
+          "feedback": 3,
+          "rating": 3,
+          "Rating": 3,
+          "score": 3,
+          "employeeRating": 3,
+          "employee_rating": 3,
+          "comments": "Delivered a project with full accountability, but a couple of escalations reached the manager directly, which should have been handled better.",
+          "Comment": "Delivered a project with full accountability, but a couple of escalations reached the manager directly, which should have been handled better.",
+          "comment": "Delivered a project with full accountability, but a couple of escalations reached the manager directly, which should have been handled better.",
+          "feedback_text": "Delivered a project with full accountability, but a couple of escalations reached the manager directly, which should have been handled better.",
+          "reason": "Delivered a project with full accountability, but a couple of escalations reached the manager directly, which should have been handled better.",
+          "employeeComments": "Delivered a project with full accountability, but a couple of escalations reached the manager directly, which should have been handled better.",
+          "employee_comments": "Delivered a project with full accountability, but a couple of escalations reached the manager directly, which should have been handled better.",
+          "employeeFeedback": "Delivered a project with full accountability, but a couple of escalations reached the manager directly, which should have been handled better."
+        },
+        {
+          "developmentActivities": [
+            "."
+          ],
+          "coachingActivities": [
+            "."
+          ],
+          "designation": [
+            {
+              "value": "Test1",
+              "label": "Test1",
+              "key": "Test1"
+            },
+            {
+              "value": "Senior Manager - Patnerships",
+              "label": "Senior Manager - Patnerships",
+              "key": "Senior Manager - Patnerships"
+            },
+            {
+              "value": "Chief Executive Officer",
+              "label": "Chief Executive Officer",
+              "key": "Chief Executive Officer"
+            },
+            {
+              "value": "Chief Functionary",
+              "label": "Chief Functionary",
+              "key": "Chief Functionary"
+            },
+            {
+              "value": "Salesforce Developer",
+              "label": "Salesforce Developer",
+              "key": "Salesforce Developer"
+            },
+            {
+              "value": "Data Science - Intern",
+              "label": "Data Science - Intern",
+              "key": "Data Science - Intern"
+            },
+            {
+              "value": "Behaviour Science - Intern",
+              "label": "Behaviour Science - Intern",
+              "key": "Behaviour Science - Intern"
+            },
+            {
+              "value": "Lead Full Stack Developer",
+              "label": "Lead Full Stack Developer",
+              "key": "Lead Full Stack Developer"
+            },
+            {
+              "value": "Full Stack Developer Intern",
+              "label": "Full Stack Developer Intern",
+              "key": "Full Stack Developer Intern"
+            },
+            {
+              "value": "Java Developer",
+              "label": "Java Developer",
+              "key": "Java Developer"
+            },
+            {
+              "value": "NodeJS Developer",
+              "label": "NodeJS Developer",
+              "key": "NodeJS Developer"
+            },
+            {
+              "value": "React Developer",
+              "label": "React Developer",
+              "key": "React Developer"
+            },
+            {
+              "value": "Java Developer",
+              "label": "Java Developer",
+              "key": "Java Developer"
+            },
+            {
+              "value": "NodeJS Developer",
+              "label": "NodeJS Developer",
+              "key": "NodeJS Developer"
+            },
+            {
+              "value": "React Developer",
+              "label": "React Developer",
+              "key": "React Developer"
+            },
+            {
+              "key": "Data Scientist",
+              "value": "Data Scientist",
+              "label": "Data Scientist - Talentspotify Private Limited"
+            }
+          ],
+          "_id": "68e3a6a7247aa2bffbd13c4c",
+          "competencyName": "Professionalism",
+          "companyId": "6396f7d703546500086f0200",
+          "description": "Professionalism",
+          "startDate": "2025-10-01",
+          "endDate": "2030-01-01",
+          "competencyType": "Behavioural",
+          "categoryActivities": ".",
+          "createdAt": "2025-10-06T11:23:19.128Z",
+          "updatedAt": "2026-02-13T06:27:38.074Z",
+          "__v": 0,
+          "Feedback": 3,
+          "Comments": "Last week, an escalation came up, and I think we handled the situation properly.",
+          "type": "employee"
+        },
+        {
+          "developmentActivities": [
+            "."
+          ],
+          "coachingActivities": [
+            "."
+          ],
+          "designation": [
+            {
+              "value": "Test1",
+              "label": "Test1",
+              "key": "Test1"
+            },
+            {
+              "value": "Senior Manager - Patnerships",
+              "label": "Senior Manager - Patnerships",
+              "key": "Senior Manager - Patnerships"
+            },
+            {
+              "value": "Chief Executive Officer",
+              "label": "Chief Executive Officer",
+              "key": "Chief Executive Officer"
+            },
+            {
+              "value": "Chief Functionary",
+              "label": "Chief Functionary",
+              "key": "Chief Functionary"
+            },
+            {
+              "value": "Salesforce Developer",
+              "label": "Salesforce Developer",
+              "key": "Salesforce Developer"
+            },
+            {
+              "value": "Data Science - Intern",
+              "label": "Data Science - Intern",
+              "key": "Data Science - Intern"
+            },
+            {
+              "value": "Behaviour Science - Intern",
+              "label": "Behaviour Science - Intern",
+              "key": "Behaviour Science - Intern"
+            },
+            {
+              "value": "Lead Full Stack Developer",
+              "label": "Lead Full Stack Developer",
+              "key": "Lead Full Stack Developer"
+            },
+            {
+              "value": "Full Stack Developer Intern",
+              "label": "Full Stack Developer Intern",
+              "key": "Full Stack Developer Intern"
+            },
+            {
+              "value": "Java Developer",
+              "label": "Java Developer",
+              "key": "Java Developer"
+            },
+            {
+              "value": "NodeJS Developer",
+              "label": "NodeJS Developer",
+              "key": "NodeJS Developer"
+            },
+            {
+              "value": "React Developer",
+              "label": "React Developer",
+              "key": "React Developer"
+            },
+            {
+              "value": "Java Developer",
+              "label": "Java Developer",
+              "key": "Java Developer"
+            },
+            {
+              "value": "NodeJS Developer",
+              "label": "NodeJS Developer",
+              "key": "NodeJS Developer"
+            },
+            {
+              "value": "React Developer",
+              "label": "React Developer",
+              "key": "React Developer"
+            },
+            {
+              "key": "Data Scientist",
+              "value": "Data Scientist",
+              "label": "Data Scientist - Talentspotify Private Limited"
+            }
+          ],
+          "_id": "68e3a67a247aa2bffbd13c48",
+          "competencyName": "Customer Focus",
+          "companyId": "6396f7d703546500086f0200",
+          "description": "customer focus",
+          "startDate": "2025-10-01",
+          "endDate": "2030-01-01",
+          "competencyType": "Behavioural",
+          "categoryActivities": ".",
+          "createdAt": "2025-10-06T11:22:34.991Z",
+          "updatedAt": "2026-02-13T06:27:59.790Z",
+          "__v": 0,
+          "Feedback": 3,
+          "Comments": "I prioritize customer needs by actively collecting feedback and implementing solutions that enhance their experience.",
+          "type": "employee"
+        },
+        {
+          "developmentActivities": [
+            "."
+          ],
+          "coachingActivities": [
+            "."
+          ],
+          "designation": [
+            {
+              "value": "Test1",
+              "label": "Test1",
+              "key": "Test1"
+            },
+            {
+              "value": "Senior Manager - Patnerships",
+              "label": "Senior Manager - Patnerships",
+              "key": "Senior Manager - Patnerships"
+            },
+            {
+              "value": "Chief Executive Officer",
+              "label": "Chief Executive Officer",
+              "key": "Chief Executive Officer"
+            },
+            {
+              "value": "Chief Functionary",
+              "label": "Chief Functionary",
+              "key": "Chief Functionary"
+            },
+            {
+              "value": "Salesforce Developer",
+              "label": "Salesforce Developer",
+              "key": "Salesforce Developer"
+            },
+            {
+              "value": "Data Science - Intern",
+              "label": "Data Science - Intern",
+              "key": "Data Science - Intern"
+            },
+            {
+              "value": "Behaviour Science - Intern",
+              "label": "Behaviour Science - Intern",
+              "key": "Behaviour Science - Intern"
+            },
+            {
+              "value": "Lead Full Stack Developer",
+              "label": "Lead Full Stack Developer",
+              "key": "Lead Full Stack Developer"
+            },
+            {
+              "value": "Full Stack Developer Intern",
+              "label": "Full Stack Developer Intern",
+              "key": "Full Stack Developer Intern"
+            },
+            {
+              "value": "Java Developer",
+              "label": "Java Developer",
+              "key": "Java Developer"
+            },
+            {
+              "value": "NodeJS Developer",
+              "label": "NodeJS Developer",
+              "key": "NodeJS Developer"
+            },
+            {
+              "value": "React Developer",
+              "label": "React Developer",
+              "key": "React Developer"
+            },
+            {
+              "value": "Java Developer",
+              "label": "Java Developer",
+              "key": "Java Developer"
+            },
+            {
+              "value": "NodeJS Developer",
+              "label": "NodeJS Developer",
+              "key": "NodeJS Developer"
+            },
+            {
+              "value": "React Developer",
+              "label": "React Developer",
+              "key": "React Developer"
+            },
+            {
+              "key": "Data Scientist",
+              "value": "Data Scientist",
+              "label": "Data Scientist - Talentspotify Private Limited"
+            }
+          ],
+          "_id": "68e3a64b247aa2bffbd13c3a",
+          "competencyName": "Leadership",
+          "companyId": "6396f7d703546500086f0200",
+          "description": "leadership",
+          "startDate": "2025-10-01",
+          "endDate": "2030-01-01",
+          "competencyType": "Behavioral",
+          "categoryActivities": ".",
+          "createdAt": "2025-10-06T11:21:47.055Z",
+          "updatedAt": "2026-02-13T06:29:33.530Z",
+          "__v": 0,
+          "Feedback": 3,
+          "Comments": "whenever it is required i guided my juniors ",
+          "type": "employee"
+        },
+        {
+          "developmentActivities": [
+            "."
+          ],
+          "coachingActivities": [
+            "."
+          ],
+          "designation": [
+            {
+              "value": "Test1",
+              "label": "Test1",
+              "key": "Test1"
+            },
+            {
+              "value": "Senior Manager - Patnerships",
+              "label": "Senior Manager - Patnerships",
+              "key": "Senior Manager - Patnerships"
+            },
+            {
+              "value": "Chief Executive Officer",
+              "label": "Chief Executive Officer",
+              "key": "Chief Executive Officer"
+            },
+            {
+              "value": "Chief Functionary",
+              "label": "Chief Functionary",
+              "key": "Chief Functionary"
+            },
+            {
+              "value": "Salesforce Developer",
+              "label": "Salesforce Developer",
+              "key": "Salesforce Developer"
+            },
+            {
+              "value": "Data Science - Intern",
+              "label": "Data Science - Intern",
+              "key": "Data Science - Intern"
+            },
+            {
+              "value": "Behaviour Science - Intern",
+              "label": "Behaviour Science - Intern",
+              "key": "Behaviour Science - Intern"
+            },
+            {
+              "value": "Lead Full Stack Developer",
+              "label": "Lead Full Stack Developer",
+              "key": "Lead Full Stack Developer"
+            },
+            {
+              "value": "Full Stack Developer Intern",
+              "label": "Full Stack Developer Intern",
+              "key": "Full Stack Developer Intern"
+            },
+            {
+              "value": "Java Developer",
+              "label": "Java Developer",
+              "key": "Java Developer"
+            },
+            {
+              "value": "NodeJS Developer",
+              "label": "NodeJS Developer",
+              "key": "NodeJS Developer"
+            },
+            {
+              "value": "React Developer",
+              "label": "React Developer",
+              "key": "React Developer"
+            },
+            {
+              "value": "Java Developer",
+              "label": "Java Developer",
+              "key": "Java Developer"
+            },
+            {
+              "value": "NodeJS Developer",
+              "label": "NodeJS Developer",
+              "key": "NodeJS Developer"
+            },
+            {
+              "value": "React Developer",
+              "label": "React Developer",
+              "key": "React Developer"
+            },
+            {
+              "key": "Data Scientist",
+              "value": "Data Scientist",
+              "label": "Data Scientist - Talentspotify Private Limited"
+            }
+          ],
+          "_id": "68e3a614247aa2bffbd13c2c",
+          "competencyName": "Collaboration",
+          "companyId": "6396f7d703546500086f0200",
+          "description": "collaboration",
+          "startDate": "2025-10-01",
+          "endDate": "2030-01-01",
+          "competencyType": "Behaviour",
+          "categoryActivities": ".",
+          "createdAt": "2025-10-06T11:20:52.671Z",
+          "updatedAt": "2026-02-13T06:29:04.522Z",
+          "__v": 0,
+          "Feedback": 4,
+          "Comments": "Recently, I collaborated with cross-functional teams and contributed to the successful completion of tasks",
+          "type": "employee"
+        },
+        {
+          "competencyName": "Ownership & Accountability",
+          "_id": "68e3a703247aa2bffbd13c6d",
+          "Feedback": 4,
+          "Comments": "Ravi delivered the project but faced escalations. Leadership coaching and experience will help him handle such situations better. Hence, 3 out of 5.",
+          "type": "manager",
+          "startDate": "2025-10-01",
+          "endDate": "2030-01-01",
+          "feedback": 4,
+          "rating": 4,
+          "Rating": 4,
+          "score": 4,
+          "managerRating": 4,
+          "manager_rating": 4,
+          "comments": "Ravi delivered the project but faced escalations. Leadership coaching and experience will help him handle such situations better. Hence, 3 out of 5.",
+          "Comment": "Ravi delivered the project but faced escalations. Leadership coaching and experience will help him handle such situations better. Hence, 3 out of 5.",
+          "comment": "Ravi delivered the project but faced escalations. Leadership coaching and experience will help him handle such situations better. Hence, 3 out of 5.",
+          "feedback_text": "Ravi delivered the project but faced escalations. Leadership coaching and experience will help him handle such situations better. Hence, 3 out of 5.",
+          "managerComments": "Ravi delivered the project but faced escalations. Leadership coaching and experience will help him handle such situations better. Hence, 3 out of 5.",
+          "manager_comments": "Ravi delivered the project but faced escalations. Leadership coaching and experience will help him handle such situations better. Hence, 3 out of 5.",
+          "managerFeedback": "Ravi delivered the project but faced escalations. Leadership coaching and experience will help him handle such situations better. Hence, 3 out of 5.",
+          "reason": "Ravi delivered the project but faced escalations. Leadership coaching and experience will help him handle such situations better. Hence, 3 out of 5."
+        },
+        {
+          "competencyName": "Professionalism",
+          "_id": "68e3a6a7247aa2bffbd13c4c",
+          "Feedback": 4,
+          "Comments": "Handled escalations effectively with a calm and solution-oriented mindset, ensuring minimal impact and timely resolution.",
+          "type": "manager",
+          "startDate": "2025-10-01",
+          "endDate": "2030-01-01"
+        },
+        {
+          "competencyName": "Customer Focus",
+          "_id": "68e3a67a247aa2bffbd13c48",
+          "Feedback": 3,
+          "Comments": "Actively gathers customer feedback and translates it into actionable improvements, contributing to enhanced customer satisfaction.",
+          "type": "manager",
+          "startDate": "2025-10-01",
+          "endDate": "2030-01-01"
+        },
+        {
+          "competencyName": "Leadership",
+          "_id": "68e3a64b247aa2bffbd13c3a",
+          "Feedback": 2,
+          "Comments": "Supports junior team members when required, but needs to further strengthen leadership consistency",
+          "type": "manager",
+          "startDate": "2025-10-01",
+          "endDate": "2030-01-01"
+        },
+        {
+          "competencyName": "Collaboration",
+          "_id": "68e3a614247aa2bffbd13c2c",
+          "Feedback": 3,
+          "Comments": "Collaborates well with cross-functional teams to ensure smooth execution and successful completion of tasks.",
+          "type": "manager",
+          "startDate": "2025-10-01",
+          "endDate": "2030-01-01"
+        }
+      ],
+      "status": "Employee SignOff",
+      "managerSubmissionDate": "2026-03-21T07:08:42.178Z",
+      "employeeSubmissionDate": "2026-03-21T07:08:42.178Z",
+      "managersRating": 3,
+      "_id": "69c36e6db4602c087d3bb985",
+      "employeeName": "68e240b0d9876d59139672d6",
+      "employeeId": "68e240b0d9876d59139672d6",
+      "employeeFullName": "Ravi K",
+      "employeeRole": "Employee",
+      "reviewPeriod": "2026-03-31",
+      "totalAchievement": "18",
+      "startDate": "2026-03-31",
+      "endDate": "2026-03-31",
+      "managerId": "68e49939df33a7c9177aaf03",
+      "managerName": "Madhavi peddireddy",
+      "attachment": "",
+      "templateName": "Demo Template",
+      "templateId": "68e3a755247aa2bffbd13c81",
+      "companyId": "6396f7d703546500086f0200",
+      "formId": "REVIEW_FORM_3118653",
+      "__v": 0,
+      "createdAt": "2026-03-25T05:11:09.819Z",
+      "updatedAt": "2026-05-24T15:15:34.991Z",
+      "employeesRating": "0.90",
+      "averageRating": "1.82",
+      "reviewPeriodStartDate": "2026-05-31",
+      "reviewPeriodEndDate": "2026-05-31"
+    }
+  ],
+  "message": "Reviews Retrieved Successfully!"
+}

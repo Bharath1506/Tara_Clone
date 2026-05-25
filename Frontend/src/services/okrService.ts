@@ -18,7 +18,20 @@ export interface OKR {
     _id?: string;
     progressStatus?: number;
     progress?: number;
+    weight?: number;
     children?: any[];
+    dueDate?: string;
+    employeeName?: string;
+    ownerName?: string;
+    owner?: string;
+    okrPeriod?: string;
+    okrYear?: number;
+    employeeReferenceId?: string;
+    employeeNumber?: string;
+    designation?: string;
+    functionName?: string;
+    companyId?: string;
+    objectiveID?: string;
 }
 
 export interface ReviewQuestion {
@@ -128,11 +141,23 @@ export const fetchEmployeeOKRs = async (): Promise<OKR[]> => {
             progressStatus: item.progressStatus || item.progress || 0,
             progress: item.progressStatus || item.progress || 0,
             weight: item.weight || 0,
+            dueDate: item.dueDate || item.targetDate || '',
+            employeeName: item.employeeName || item.ownerName || item.owner || '',
+            ownerName: item.ownerName || item.owner || item.employeeName || '',
+            owner: item.owner || item.ownerName || item.employeeName || '',
+            okrPeriod: item.okrPeriod || '',
+            okrYear: item.okrYear || item.year || undefined,
+            employeeReferenceId: item.employeeReferenceId || item.employeeId || '',
+            employeeNumber: item.employeeNumber || item.employeeId || '',
+            designation: item.designation || '',
+            functionName: item.functionName || '',
+            companyId: item.companyId || '',
+            objectiveID: item.objectiveID || item.objectiveId || '',
             keyResults: (item.children || item.keyResults || item.key_results || []).map((kr: any) => ({
                 id: kr._id || kr.krID || kr.id || 'unknown-kr-id',
                 description: kr.keyResultName || kr.okrName || kr.description || kr.title || kr.name || 'No KR Description',
-                target: String(kr.target || kr.targetValue || '0'),
-                current: String(kr.actual || kr.current || kr.currentValue || '0'),
+                target: String(kr.target || kr.targetValue || kr.percent || '0'),
+                current: String(kr.actual || kr.current || kr.currentValue || kr.percent || '0'),
                 metrics: kr.unit || kr.uom || kr.metrics || ''
             }))
         }));
@@ -162,7 +187,9 @@ const hasReviewData = (payload: any): boolean => {
 export const fetchEmployeeReviewForm = async (): Promise<any> => {
     const apiKey = getReviewFormApiKey('employee');
     const apiUrl = import.meta.env.VITE_REVIEW_FORM_API_URL;
+    console.log('[FETCH] Employee Review API URL from env:', apiUrl);
     if (!apiKey || !apiUrl) { console.warn('Employee Review API key or URL is missing.'); return null; }
+    
     try {
         const employeeUrl = apiUrl;
         const response = await fetch(`${employeeUrl}${employeeUrl.includes('?') ? '&' : '?'}t=${Date.now()}`, {
@@ -223,13 +250,13 @@ export const getFreshReviewForm = async (force: boolean = false) => {
     const now = Date.now();
     if (!force && cachedReviewForm && (now - lastReviewFetchTime < 3000)) return cachedReviewForm;
 
-    let fresh = await fetchManagerReviewForm();
-    let source: 'manager' | 'employee' = 'manager';
+    let fresh = await fetchEmployeeReviewForm();
+    let source: 'manager' | 'employee' = 'employee';
 
     if (!hasReviewData(fresh)) {
-        console.warn('%c[FETCH] Manager review form returned no valid data, falling back to employee review form.', 'color: orange;');
-        fresh = await fetchEmployeeReviewForm();
-        source = 'employee';
+        console.warn('%c[FETCH] Employee review form returned no valid data, falling back to manager review form.', 'color: orange;');
+        fresh = await fetchManagerReviewForm();
+        source = 'manager';
     }
 
     if (!hasReviewData(fresh)) {
@@ -280,6 +307,16 @@ export const clearReviewCache = () => {
     cachedReviewForm = null; lastReviewFetchTime = 0;
     cachedEmployeeReviewForm = null; lastEmployeeReviewFetchTime = 0;
     cachedManagerReviewForm = null; lastManagerReviewFetchTime = 0;
+};
+
+export const normalizeReviewObject = (reviewObj: any) => {
+    if (!reviewObj || typeof reviewObj !== 'object') return reviewObj;
+    try {
+        return applyUpdateToReviewObject(reviewObj, reviewObj);
+    } catch (error) {
+        console.error('Error normalizing review object:', error);
+        return reviewObj;
+    }
 };
 
 /**
